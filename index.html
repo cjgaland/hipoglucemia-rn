@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Hipoglucemia RN · Hospital de Montilla</title>
+  <meta name="description" content="Guía interactiva y calculadora del Protocolo de hipoglucemia en recién nacidos del Servicio de Pediatría del Hospital de Montilla.">
+  <meta name="theme-color" content="#1E3A5F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Hipoglucemia RN">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="img/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <img src="img/icon.svg" alt="" width="34" height="34">
+      <div>
+        <div class="brand-kicker">Protocolo de actuación</div>
+        <div class="brand-title">Hipoglucemia en recién nacidos</div>
+      </div>
+    </div>
+    <nav class="tabs" aria-label="Secciones">
+      <button class="tab" data-tab="guia" aria-current="page"><span class="ico" aria-hidden="true">◉</span><span>Guía</span></button>
+      <button class="tab" data-tab="calc"><span class="ico" aria-hidden="true">∑</span><span>Calculadoras</span></button>
+      <button class="tab" data-tab="proto"><span class="ico" aria-hidden="true">≡</span><span>Protocolo</span></button>
+      <button class="tab" data-tab="info"><span class="ico" aria-hidden="true">i</span><span>Info</span></button>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section id="tab-guia" class="panel" aria-label="Guía de actuación"></section>
+    <section id="tab-calc" class="panel" hidden aria-label="Calculadoras"></section>
+    <section id="tab-proto" class="panel" hidden aria-label="Protocolo"></section>
+    <section id="tab-info" class="panel" hidden aria-label="Información"></section>
+  </main>
+
+  <div id="timer" class="timer" hidden role="status" aria-live="polite"></div>
+
+  <noscript><p class="noscript">Esta aplicación necesita JavaScript activado.</p></noscript>
+  <script src="app.js"></script>
+</body>
+</html>
