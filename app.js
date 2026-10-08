@@ -487,7 +487,7 @@ function renderProto() {
     <tr><td class="l amb">Límite superior</td><td class="amb" colspan="3">90 - 100 mg/dL</td></tr></table></div><p class="tbl-note">Tabla 1. Valores de hipoglucemia precoz y persistente, y glucemia objetivo.</p>`;
   const sec = (n, t, body) => `<details class="sec"><summary><span class="n">${n}</span>${t}</summary><div class="body">${body}</div></details>`;
   $('#tab-proto').innerHTML = `
-    <input class="search" id="p-search" type="search" placeholder="Buscar en el protocolo…" aria-label="Buscar en el protocolo">
+    <input class="search" id="p-search" type="search" placeholder="Buscar en el protocolo… (p. ej. glucagon, dosis gel)" aria-label="Buscar en el protocolo" autocapitalize="none" autocorrect="off" autocomplete="off" spellcheck="false" enterkeyhint="search">
     <div id="p-secs">
     ${sec('1', 'Introducción', `<p>La hipoglucemia es la alteración metabólica más frecuente en el período neonatal; aparece entre el 5 - 7% de los recién nacidos (RN) a término y entre el 3,2 - 14,7% de los RN pretérmino, pudiendo llegar hasta el 50% en los RN con factores de riesgo de hipoglucemia.</p>
       <p>Sin embargo no existen datos suficientes para definir una cifra de glucemia por debajo de la cual habría que intervenir para prevenir la morbilidad. Esto explica que los porcentajes de incidencia de hipoglucemia referidos en las diversas series y estudios estén sujetos a variación. En el presente documento se proponen unos valores para definir la hipoglucemia precoz y persistente.</p>
@@ -533,25 +533,43 @@ function renderProto() {
       <tr><td class="l amb" style="vertical-align:top"><b>Orina</b>:<br><span style="font-weight:400;color:var(--ink)">Congelar una alícuota de la primera micción tras la hipoglucemia.</span></td><td class="l">- pH, iones.<br>- Cuerpos cetónicos.<br>- Sustancias reductoras.<br>- Ácidos orgánicos.<br>- Perfil de acilglicinas.</td></tr></table></div>`)}
     </div>`;
 }
+// Búsqueda tolerante: sin distinguir mayúsculas/minúsculas ni acentos (gluCAGON = glucagón,
+// nino = niño) y con varias palabras en cualquier orden («dosis gel» encuentra «gel… dosis»).
+// fold() conserva la longitud del texto carácter a carácter para poder resaltar en el original.
+function fold(str) {
+  let out = '';
+  for (const ch of str) {
+    const f = ch.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+    out += ch.length === 1 ? (f[0] || ch) : ch;   // mantiene la misma longitud que el original
+  }
+  return out;
+}
 function searchProto(q) {
-  q = q.trim().toLowerCase();
+  const terms = fold(q).split(/\s+/).filter(t => t.length > 0);
   let first = true;   // con búsqueda: se muestran los apartados que coinciden y solo se abre el primero
   $$('#p-secs details.sec').forEach(d => {
     $$('mark', d).forEach(m => m.replaceWith(document.createTextNode(m.textContent)));
     d.normalize();
-    if (!q) { d.hidden = false; d.open = false; return; }
-    const hit = d.textContent.toLowerCase().includes(q);
+    if (!terms.length) { d.hidden = false; d.open = false; return; }
+    const txt = fold(d.textContent);
+    const hit = terms.every(t => txt.includes(t));
     d.hidden = !hit; d.open = hit && first;
     if (hit) first = false;
-    if (hit && q.length > 1) {
-      const walker = document.createTreeWalker(d, NodeFilter.SHOW_TEXT);
-      const nodes = []; while (walker.nextNode()) nodes.push(walker.currentNode);
-      nodes.forEach(n => {
-        const i = n.textContent.toLowerCase().indexOf(q); if (i < 0) return;
-        const r = document.createRange(); r.setStart(n, i); r.setEnd(n, i + q.length);
-        const m = document.createElement('mark'); r.surroundContents(m);
-      });
-    }
+    if (!hit) return;
+    // resaltar todas las apariciones de cada término (de atrás hacia delante para no desplazar posiciones)
+    const walker = document.createTreeWalker(d, NodeFilter.SHOW_TEXT);
+    const nodes = []; while (walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(n => {
+      const f = fold(n.textContent), spans = [];
+      terms.filter(t => t.length > 1).forEach(t => { let i = f.indexOf(t); while (i >= 0) { spans.push([i, i + t.length]); i = f.indexOf(t, i + t.length); } });
+      spans.sort((x, y) => x[0] - y[0]);
+      const merged = [];
+      spans.forEach(sp => { const last = merged[merged.length - 1]; if (last && sp[0] <= last[1]) last[1] = Math.max(last[1], sp[1]); else merged.push(sp.slice()); });
+      for (let k = merged.length - 1; k >= 0; k--) {
+        const r = document.createRange(); r.setStart(n, merged[k][0]); r.setEnd(n, merged[k][1]);
+        r.surroundContents(document.createElement('mark'));
+      }
+    });
   });
 }
 
