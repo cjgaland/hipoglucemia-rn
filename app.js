@@ -485,7 +485,7 @@ function renderProto() {
     <tr><td class="l hipo">Umbral diagnóstico (mg/dL)</td><td class="hipo">&lt; 40 mg/dL</td><td class="hipo">&lt; 46 mg/dL</td><td class="hipo">&lt; 50 mg/dL</td></tr>
     <tr><td class="l ok">Objetivo terapéutico (mg/dL)</td><td class="ok">&gt; 40 mg/dL</td><td class="ok">&gt; 46 mg/dL</td><td class="ok">&gt; 60 mg/dL</td></tr>
     <tr><td class="l amb">Límite superior</td><td class="amb" colspan="3">90 - 100 mg/dL</td></tr></table></div><p class="tbl-note">Tabla 1. Valores de hipoglucemia precoz y persistente, y glucemia objetivo.</p>`;
-  const sec = (n, t, body, open = false) => `<details class="sec"${open ? ' open' : ''}><summary><span class="n">${n}</span>${t}</summary><div class="body">${body}</div></details>`;
+  const sec = (n, t, body) => `<details class="sec"><summary><span class="n">${n}</span>${t}</summary><div class="body">${body}</div></details>`;
   $('#tab-proto').innerHTML = `
     <input class="search" id="p-search" type="search" placeholder="Buscar en el protocolo…" aria-label="Buscar en el protocolo">
     <div id="p-secs">
@@ -535,12 +535,14 @@ function renderProto() {
 }
 function searchProto(q) {
   q = q.trim().toLowerCase();
+  let first = true;   // con búsqueda: se muestran los apartados que coinciden y solo se abre el primero
   $$('#p-secs details.sec').forEach(d => {
     $$('mark', d).forEach(m => m.replaceWith(document.createTextNode(m.textContent)));
     d.normalize();
-    if (!q) { d.hidden = false; return; }
+    if (!q) { d.hidden = false; d.open = false; return; }
     const hit = d.textContent.toLowerCase().includes(q);
-    d.hidden = !hit; d.open = hit;
+    d.hidden = !hit; d.open = hit && first;
+    if (hit) first = false;
     if (hit && q.length > 1) {
       const walker = document.createTreeWalker(d, NodeFilter.SHOW_TEXT);
       const nodes = []; while (walker.nextNode()) nodes.push(walker.currentNode);
@@ -627,6 +629,17 @@ document.addEventListener('change', (e) => {
   if (el.id === 'g-gel') { S.gel = el.checked; rerenderFlowKeepingFocus(); return; }
   const box = el.closest('[data-calc]'); if (box) runCalc(box);
 });
+// Protocolo en acordeón: solo un apartado abierto a la vez
+document.addEventListener('toggle', (e) => {
+  const d = e.target;
+  if (!d.matches || !d.matches('#p-secs details.sec') || !d.open) return;
+  $$('#p-secs details.sec').forEach(o => { if (o !== d && o.open) o.open = false; });
+  requestAnimationFrame(() => {
+    const r = d.getBoundingClientRect(), top = $('.topbar').getBoundingClientRect().bottom;
+    if (r.top < top || r.top > window.innerHeight * 0.4) window.scrollTo({ top: window.scrollY + r.top - top - 10, behavior: 'smooth' });
+  });
+}, true);
+
 // Intro en un campo de la guía = confirmar el valor
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && e.target.matches('#tab-guia input[data-s]')) { e.preventDefault(); e.target.blur(); }

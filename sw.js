@@ -1,6 +1,6 @@
 // Service worker: permite usar la app sin conexión.
 // Al publicar cambios, sube el número de VERSION para que los móviles descarguen la nueva versión.
-const VERSION = 'hipo-rn-v1';
+const VERSION = 'hipo-rn-v2';
 const FILES = ['./', 'index.html', 'styles.css', 'app.js', 'manifest.webmanifest',
   'img/icon.svg', 'img/icon-192.png', 'img/icon-512.png', 'img/apple-touch-icon.png', 'img/algoritmo.png'];
 
