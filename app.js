@@ -479,6 +479,17 @@ function runCalc(box) { const f = CALC[box.dataset.calc]; if (f) f(box); }
 // =====================================================================
 // PROTOCOLO (contenido íntegro)
 // =====================================================================
+// Protocolo completo en PDF (carpeta Protocolo/)
+const PDFS = [
+  ['Formato normal', '13 páginas', 'Protocolo/Protocolo hipoglucemia en recién nacidos (nuevo diseño).pdf'],
+  ['Formato revista', '8 páginas, a dos columnas', 'Protocolo/Protocolo hipoglucemia en recién nacidos (formato revista).pdf'],
+];
+function pdfCard() {
+  return `<div class="card navy"><span class="step">Documento completo</span><h2>Protocolo en PDF</h2>
+    ${PDFS.map(([t, d, f]) => `<div class="dose"><div class="what"><b>${t}</b><small>${d}</small></div>
+      <div class="row"><a class="btn small ghost" href="${encodeURI(f)}" target="_blank" rel="noopener">Ver</a><a class="btn small" href="${encodeURI(f)}" download>Descargar</a></div></div>`).join('')}</div>`;
+}
+
 function renderProto() {
   const T1 = `<div class="tbl-wrap"><table>
     <tr><th></th><th colspan="2">Hipoglucemia precoz</th><th>Hipoglucemia persistente</th></tr>
@@ -492,7 +503,7 @@ function renderProto() {
     <p class="tbl-note">Tabla 5. Aportes de glucosa según la concentración y el ritmo del suero pautado. <span style="color:var(--ok);font-weight:700">En verde</span>: aportes iniciales típicos del RN. <span style="color:var(--warn);font-weight:700">En naranja</span>: con aportes &gt; 10-12 mg/kg/min, valorar ampliar el estudio y/o asociar tratamiento farmacológico.</p>`;
   const sec = (n, t, body) => `<details class="sec"><summary><span class="n">${n}</span>${t}</summary><div class="body">${body}</div></details>`;
   const ul = (a) => `<ul>${a.map(x => `<li>${x}</li>`).join('')}</ul>`;
-  $('#tab-proto').innerHTML = `
+  $('#tab-proto').innerHTML = `${pdfCard()}
     <input class="search" id="p-search" type="search" placeholder="Buscar en el protocolo… (p. ej. glucagon, dosis gel)" aria-label="Buscar en el protocolo" autocapitalize="none" autocorrect="off" autocomplete="off" spellcheck="false" enterkeyhint="search">
     <div id="p-secs">
     ${sec('Ab', 'Abreviaturas', `<div class="tbl-wrap"><table>${[['ABL', 'Analizador de gasometría (glucemia en muestra de sangre completa)'], ['CIR', 'Restricción del crecimiento intrauterino'], ['GH', 'Hormona de crecimiento'], ['IGF-1', 'Factor de crecimiento similar a la insulina tipo 1'], ['IGFBP-1', 'Proteína transportadora 1 del factor de crecimiento similar a la insulina'], ['IV', 'Intravenoso'], ['Pro-IGF-II', 'Precursor del factor de crecimiento similar a la insulina tipo 2'], ['RN', 'Recién nacido'], ['SG', 'Suero glucosado']].map(([a, b]) => `<tr><td class="l"><b>${a}</b></td><td class="l">${b}</td></tr>`).join('')}</table></div>`)}
@@ -605,6 +616,7 @@ function renderInfo() {
       <li>Compruebe siempre las dosis antes de administrarlas.</li>
       <li>Los cálculos de aportes de glucosa se realizan con la fórmula del Anexo 2 (punto 4).</li>
 </ul></div>
+    ${pdfCard()}
     <div class="card ok"><span class="step">Privacidad</span><h2>Ningún dato sale del dispositivo</h2>
       <p>Los datos que se introducen (peso, horas de vida, glucemias…) solo se usan para los cálculos en pantalla. No se guardan ni se envían a ningún servidor. Al pulsar «Nuevo paciente» o cerrar la página se borran.</p></div>
     <div class="card"><span class="step">Instalación</span><h2>Usarla como una app</h2>

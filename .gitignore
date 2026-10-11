@@ -1,1 +1,3 @@
 .DS_Store
+# Los Word del protocolo se guardan aquí como copia local, pero no se publican
+Protocolo/*.docx

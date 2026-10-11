@@ -1,8 +1,10 @@
 // Service worker: permite usar la app sin conexión.
 // Al publicar cambios, sube el número de VERSION para que los móviles descarguen la nueva versión.
-const VERSION = 'hipo-rn-v4';
+const VERSION = 'hipo-rn-v5';
 const FILES = ['./', 'index.html', 'styles.css', 'app.js', 'manifest.webmanifest',
-  'img/icon.svg', 'img/icon-192.png', 'img/icon-512.png', 'img/apple-touch-icon.png', 'img/algoritmo.png'];
+  'img/icon.svg', 'img/icon-192.png', 'img/icon-512.png', 'img/apple-touch-icon.png', 'img/algoritmo.png',
+  encodeURI('Protocolo/Protocolo hipoglucemia en recién nacidos (nuevo diseño).pdf'),
+  encodeURI('Protocolo/Protocolo hipoglucemia en recién nacidos (formato revista).pdf')];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.addAll(FILES)).then(() => self.skipWaiting()));

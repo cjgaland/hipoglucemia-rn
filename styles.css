@@ -76,6 +76,8 @@ ul.clean { margin: 6px 0; padding-left: 20px; } ul.clean li { margin: 3px 0; }
 .btn { border: 0; background: var(--accent); color: #fff; padding: 11px 16px; border-radius: 10px; font-weight: 700; cursor: pointer; min-height: 44px; }
 .btn.ghost { background: transparent; color: var(--accent); border: 1.5px solid var(--accent); }
 .btn.small { padding: 7px 12px; min-height: 36px; font-size: 14px; }
+a.btn { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+.dose .row { flex-wrap: nowrap; }
 .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 
 /* ---------- resultados ---------- */
