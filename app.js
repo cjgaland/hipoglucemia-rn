@@ -479,13 +479,14 @@ function runCalc(box) { const f = CALC[box.dataset.calc]; if (f) f(box); }
 // =====================================================================
 // PROTOCOLO (contenido íntegro)
 // =====================================================================
-// Protocolo completo en PDF (carpeta Protocolo/)
+// Protocolo completo e infografía en PDF (carpeta Protocolo/)
 const PDFS = [
   ['Formato normal', '13 páginas', 'Protocolo/Protocolo hipoglucemia en recién nacidos (nuevo diseño).pdf'],
   ['Formato revista', '8 páginas, a dos columnas', 'Protocolo/Protocolo hipoglucemia en recién nacidos (formato revista).pdf'],
+  ['Infografía', 'Resumen visual en una página (A3 apaisado)', 'Protocolo/Infografía hipoglucemia en recién nacidos.pdf'],
 ];
 function pdfCard() {
-  return `<div class="card navy"><span class="step">Documento completo</span><h2>Protocolo en PDF</h2>
+  return `<div class="card navy"><span class="step">Documento completo</span><h2>Protocolo en PDF e infografía</h2>
     ${PDFS.map(([t, d, f]) => `<div class="dose"><div class="what"><b>${t}</b><small>${d}</small></div>
       <div class="row"><a class="btn small ghost" href="${encodeURI(f)}" target="_blank" rel="noopener">Ver</a><a class="btn small" href="${encodeURI(f)}" download>Descargar</a></div></div>`).join('')}</div>`;
 }
