@@ -24,9 +24,9 @@ const PR = {
   objetivo: { p0: 40, p1: 46, p2: 60 },        // Tabla 1: objetivo terapéutico (≥ 40, ≥ 46, > 60)
   objIncl: { p0: true, p1: true, p2: false },
   gel: { mlkg: 0.5, mgkg: 200 },               // Anexo 1
-  formula1: 5, formula2sinGel: 8,              // Notas 2 y 5 (mL/kg)
+  formula1: 5, formula2: 8,                    // mL/kg · 1.ª corrección: nota 2 y Anexo 1 · 2.ª corrección: algoritmo, nota 5 y Anexo 1
   bolo: { mlkg: 2, mgkg: 200 },                // Anexo 2, 2.2 (SG 10 %)
-  ivInicio: { pct: 10, mlkgd: 80, gir: 5.5 },  // Anexo 2, 2.1
+  ivInicio: { pct: 10, mlkgd: 80, gir: 5.6 },  // Anexo 2, 2.1
   glucagon: { min: 20, max: 30, maxMg: 1 },    // Nota 4 (µg/kg)
   liqMax72: 100, liqAlt: 160,                  // Anexo 2, 2.3 y 2.6
   accesos: {
@@ -183,15 +183,15 @@ function needPeso() { return S.peso ? '' : `<div class="alert info"><span class=
 const doseLine = (what, how, sub = '') => `<div class="dose"><div class="what">${what}${sub ? `<small>${sub}</small>` : ''}</div><div class="how">${how}</div></div>`;
 
 function correccion(n) {
-  // n = 1: primera corrección (algoritmo, nota 2) · n = 2: segunda corrección (algoritmo, nota 5)
+  // n = 1: primera corrección (algoritmo, nota 2) · n = 2: segunda corrección (algoritmo, nota 5): fórmula 8 mL/kg con o sin gel
   const p = S.peso;
   const gel = p ? `${fml(PR.gel.mlkg * p)} mL` : '0,5 mL/kg';
-  const fv = n === 2 && !S.gel ? PR.formula2sinGel : PR.formula1;
+  const fv = n === 2 ? PR.formula2 : PR.formula1;
   const f = p ? `${fml(fv * p)} mL` : `${fv} mL/kg`;
   let html = needPeso();
   if (S.gel) html += doseLine('Gel oral de dextrosa al 40 %', gel, `0,5 mL/kg (${p ? fmt(PR.gel.mgkg * p, 0) + ' mg' : '200 mg/kg'}) · secar la boca, aplicar en la mucosa yugal y masajear la mejilla`);
   html += doseLine(S.gel ? 'Después: colocar al pecho si la madre desea lactancia materna, o bien dar una toma de fórmula de inicio' : 'Sin gel: colocar al pecho si la madre desea lactancia materna, o bien dar una toma de fórmula de inicio',
-    `${f} de fórmula`, `${fv} mL/kg · ${S.gel ? 'administrar primero el gel y posteriormente ofrecer la toma (nota 2)' : n === 1 ? 'nota 2' : 'nota 5'}`);
+    `${f} de fórmula`, `${fv} mL/kg · ${S.gel ? `administrar primero el gel y posteriormente ofrecer la toma (${n === 1 ? 'nota 2; Anexo 1, primera dosis' : 'algoritmo; Anexo 1, segunda dosis'})` : n === 1 ? 'nota 2' : 'nota 5'}`);
   html += `<div class="row" style="margin-top:10px"><span class="lead" style="margin:0">Comprobar glucemia <b>30 minutos tras la toma</b>.</span>${timerBtn(30, n === 1 ? 'Control tras 1.ª corrección' : 'Control tras 2.ª corrección')}</div>`;
   return html;
 }
@@ -226,10 +226,10 @@ function ivBlock(motivo) {
   return `<div class="card navy"><span class="step">Tratamiento intravenoso · Anexo 2</span><h2>Iniciar aportes IV con SG 10 %</h2>
     ${motivo ? `<div class="alert info"><span class="i">→</span><div><b>Criterio:</b> ${motivo}</div></div>` : ''}
     ${needPeso()}
-    ${doseLine('Suero glucosado al 10 % a 80 mL/kg/día', mlh ? `${fmt(mlh, 1)} mL/h` : '80 mL/kg/día', `= 5,5 mg/kg/min de glucosa (Anexo 2, 2.1)${mlh ? ` · ${fmt(80 * p, 0)} mL/día` : ''}`)}
+    ${doseLine('Suero glucosado al 10 % a 80 mL/kg/día', mlh ? `${fmt(mlh, 1)} mL/h` : '80 mL/kg/día', `= 5,6 mg/kg/min de glucosa (Anexo 2, 2.1)${mlh ? ` · ${fmt(80 * p, 0)} mL/día` : ''}`)}
     ${doseLine(`Bolo de SG 10 %${sint ? '' : ' <small>(solo si el RN está sintomático)</small>'}`, p ? `${fml(PR.bolo.mlkg * p)} mL` : '2 mL/kg', `2 mL/kg = 200 mg/kg, en 5-10 minutos · reservado para las hipoglucemias sintomáticas (Anexo 2, 2.2; algoritmo, nota 3)`)}
     ${doseLine('Si hay retraso en conseguir un acceso venoso: gel de dextrosa al 40 %', p ? `${fml(PR.gel.mlkg * p)} mL` : '0,5 mL/kg', '0,5 mL/kg (nota 3)')}
-    <div class="row" style="margin-top:10px"><span class="lead" style="margin:0">Comprobar glucemia a los <b>30 minutos</b> (algoritmo); medir la glucosa venosa a los 30-45 minutos de iniciada la infusión y tras cada modificación de dosis (Anexo 2, 2.4).</span>${timerBtn(30, 'Control tras inicio IV')}</div>
+    <div class="row" style="margin-top:10px"><span class="lead" style="margin:0">Comprobar glucemia a los <b>30 minutos</b> (algoritmo); medir la glucosa (capilar inicialmente, y comprobar con venosa según cifras y evolución) a los 30-45 minutos de iniciada la infusión y tras cada modificación de dosis (Anexo 2, 2.4).</span>${timerBtn(30, 'Control tras inicio IV')}</div>
     <h3>Valorar uso de glucagón (nota 4)</h3>
     <p style="margin:4px 0">En caso de hipoglucemia grave (&lt; 30 mg/dL) o si persiste la hipoglucemia &lt; 50 mg/dL a pesar de estar administrando la dosis máxima de glucosa intravenosa en infusión continua.</p>
     ${grave ? `<div class="alert hipo"><span class="i">!</span><div>Se ha registrado una glucemia <b>&lt; 30 mg/dL</b> (hipoglucemia grave).</div></div>` : ''}
@@ -260,7 +260,7 @@ function muestraCritica() {
     <h3>Sangre — congelar la mayor cantidad posible de suero/plasma, para estudios posteriores</h3>
     <div class="checks">${['Glucosa.', 'Beta-hidroxibutirato.', 'Ácidos grasos libres.', 'Lactato.', 'Piruvato.', 'Glicerol.', 'Alanina.', 'Función hepática y amonio.', 'Gasometría, ionograma (hiato aniónico).', 'Insulina, péptido C.', 'Cortisol, hormona de crecimiento (GH).', 'Carnitina (total y esterificada).', 'Acilcarnitinas.']
       .map(t => `<label class="check"><input type="checkbox"><span>${t}</span></label>`).join('')}</div>
-    <p class="lead" style="margin-top:8px">Ocasionalmente (no requieren extracción en hipoglucemia): Aminoácidos. IGFBP-1. IGF-1. Pro-IGF-II. Tiroxina libre, tirotropina. Isoformas de transferrina.</p>
+    <p class="lead" style="margin-top:8px">Ocasionalmente (no requieren extracción en hipoglucemia): Aminoácidos. IGFBP-3. IGF-1. Pro-IGF-II. Tiroxina libre, tirotropina. Isoformas de transferrina.</p>
     <h3>Orina — congelar una alícuota de la primera micción tras la hipoglucemia</h3>
     <div class="checks">${['pH, iones.', 'Cuerpos cetónicos.', 'Sustancias reductoras.', 'Ácidos orgánicos.', 'Perfil de acilglicinas.']
       .map(t => `<label class="check"><input type="checkbox"><span>${t}</span></label>`).join('')}</div></div>`;
@@ -271,7 +271,7 @@ function renderFlow() {
   const per = PR.periodo(S.horas);
   const out = [];
   if (S.eg != null && S.eg < 35) out.push(`<div class="alert warn"><span class="i">!</span><div>El algoritmo del protocolo está diseñado para <b>RN ≥ 35 semanas de gestación</b> (apartado 3, Ámbito de aplicación).</div></div>`);
-  if (!Object.values(S.factores).some(Boolean)) out.push(`<div class="alert info"><span class="i">i</span><div>El algoritmo se aplica a los RN <b>con factores de riesgo</b> de hipoglucemia (o sin posibilidad de alimentación enteral). Marque los factores presentes.</div></div>`);
+  if (!Object.values(S.factores).some(Boolean)) out.push(`<div class="alert info"><span class="i">i</span><div>El protocolo se aplica a los RN <b>con factores de riesgo</b> de hipoglucemia y a los RN que presenten hipoglucemia. Marque los factores presentes.</div></div>`);
   if (!per) { out.push(`<div class="card plain"><p class="lead" style="margin:0">Introduzca las <b>horas de vida</b> para empezar.</p></div>`); $('#flow').innerHTML = out.join(''); return; }
 
   // ----- Hipoglucemia persistente (≥72 h) -----
@@ -296,7 +296,7 @@ function renderFlow() {
   {
     const falta = S.horas != null && S.horas < 2 ? Math.round((2 - S.horas) * 60) : null;
     out.push(`<div class="card"><span class="step">Paso 3 · Primer control</span><h2>Alimentación precoz y primer control</h2>
-    <ul class="clean"><li>Alimentación precoz (1.ª hora de vida).</li><li>En los RN de riesgo asintomáticos, la primera glucemia capilar se determinará a las <b>2 horas de vida</b>, coincidiendo con la alimentación.</li><li>Si el RN presenta síntomas compatibles con hipoglucemia, la glucemia se determinará <b>inmediatamente</b>, sin esperar a las 2 horas.</li></ul>
+    <ul class="clean"><li>Alimentación precoz.</li><li>En los RN de riesgo asintomáticos, la primera glucemia capilar se determinará a las <b>2 horas de vida</b>, coincidiendo con la alimentación.</li><li>Si el RN presenta síntomas compatibles con hipoglucemia, la glucemia se determinará <b>inmediatamente</b>, sin esperar a las 2 horas.</li></ul>
     ${S.sint !== 'asint' ? `<div class="alert hipo"><span class="i">!</span><div>RN con síntomas: <b>determinar la glucemia ahora</b>.</div></div>` : falta ? `<div class="row" style="margin-bottom:8px">${timerBtn(falta, 'Primera glucemia (2 h de vida)')}</div>` : ''}
     ${glucInput('g-g1', 'g1', 'Glucemia del primer control')}${recordatorio(S.g1)}${limiteMsg(S.g1, per)}</div>`);
   }
@@ -311,8 +311,8 @@ function renderFlow() {
     out.push(`<div class="card hipo"><span class="step">Paso 4 · Hipoglucemia (${S.g1} &lt; ${PR.umbral[per]} mg/dL)</span><h2>Primera corrección</h2>${sintAviso()}${correccion(1)}
       ${glucInput('g-g2', 'g2', 'Glucemia 30 minutos tras la toma')}${recordatorio(S.g2)}${yn('tol', '¿Buena tolerancia oral?')}</div>`);
   } else {
-    out.push(`<div class="card ok"><span class="step">Paso 4 · Glucemia ${objTxt(per)} mg/dL</span><h2>Lactancia a demanda</h2>
-      <ul class="clean"><li>Lactancia a demanda.</li><li>Comprobar glucemia antes de la siguiente toma.</li></ul>
+    out.push(`<div class="card ok"><span class="step">Paso 4 · Glucemia ${objTxt(per)} mg/dL</span><h2>Lactancia a demanda o cada 3 horas</h2>
+      <ul class="clean"><li>Lactancia materna a demanda o lactancia artificial cada 3 horas.</li><li>Comprobar glucemia antes de la siguiente toma.</li></ul>
       <div class="row">${timerBtn(180, 'Control antes de la siguiente toma')}</div>
       ${glucInput('g-g2', 'g2', 'Glucemia antes de la siguiente toma')}${recordatorio(S.g2)}${yn('tol', '¿Buena tolerancia oral?')}</div>`);
   }
@@ -434,10 +434,10 @@ const CALC = {
     if (!p) { o.innerHTML = `<p class="lead" style="margin-top:10px">Introduzca el peso.</p>`; return; }
     o.innerHTML = `<div style="margin-top:8px">
       ${doseLine('Gel oral de dextrosa al 40 %', `${fml(0.5 * p)} mL`, `0,5 mL/kg = ${fmt(200 * p, 0)} mg (Anexo 1)`)}
-      ${doseLine('Fórmula de inicio con el gel (si no se coloca al pecho)', `${fml(5 * p)} mL`, '5 mL/kg (nota 2; Anexo 1)')}
-      ${doseLine('Fórmula de inicio, 2.ª corrección sin gel (si no se coloca al pecho)', `${fml(8 * p)} mL`, '8 mL/kg (nota 5)')}
+      ${doseLine('Fórmula de inicio, 1.ª corrección (si no se coloca al pecho)', `${fml(5 * p)} mL`, '5 mL/kg (nota 2; Anexo 1, primera dosis)')}
+      ${doseLine('Fórmula de inicio, 2.ª corrección (si no se coloca al pecho)', `${fml(8 * p)} mL`, '8 mL/kg (algoritmo; nota 5; Anexo 1, segunda dosis)')}
       ${doseLine('Bolo de SG 10 % (hipoglucemia sintomática)', `${fml(2 * p)} mL`, '2 mL/kg = 200 mg/kg, en 5-10 minutos (Anexo 2, 2.2)')}
-      ${doseLine('SG 10 % inicial a 80 mL/kg/día', `${fmt(80 * p / 24, 1)} mL/h`, '5,5 mg/kg/min (Anexo 2, 2.1)')}
+      ${doseLine('SG 10 % inicial a 80 mL/kg/día', `${fmt(80 * p / 24, 1)} mL/h`, '5,6 mg/kg/min (Anexo 2, 2.1)')}
       ${doseLine('Glucagón 20-30 µg/kg (máximo 1 mg)', `${fmt(Math.min(20 * p, 1000), 0)}-${fmt(Math.min(30 * p, 1000), 0)} µg`, 'Nota 4 · no se recomienda en RN pequeños para la edad gestacional ni en prematuros')}
       ${doseLine('Líquidos máximos primeras 72 h', `${fmt(100 * p / 24, 1)} mL/h`, '100 mL/kg/día, IV y oral (Anexo 2, 2.3)')}</div>`;
   },
@@ -506,17 +506,17 @@ function renderProto() {
   $('#tab-proto').innerHTML = `${pdfCard()}
     <input class="search" id="p-search" type="search" placeholder="Buscar en el protocolo… (p. ej. glucagon, dosis gel)" aria-label="Buscar en el protocolo" autocapitalize="none" autocorrect="off" autocomplete="off" spellcheck="false" enterkeyhint="search">
     <div id="p-secs">
-    ${sec('Ab', 'Abreviaturas', `<div class="tbl-wrap"><table>${[['ABL', 'Analizador de gasometría (glucemia en muestra de sangre completa)'], ['CIR', 'Restricción del crecimiento intrauterino'], ['GH', 'Hormona de crecimiento'], ['IGF-1', 'Factor de crecimiento similar a la insulina tipo 1'], ['IGFBP-1', 'Proteína transportadora 1 del factor de crecimiento similar a la insulina'], ['IV', 'Intravenoso'], ['Pro-IGF-II', 'Precursor del factor de crecimiento similar a la insulina tipo 2'], ['RN', 'Recién nacido'], ['SG', 'Suero glucosado']].map(([a, b]) => `<tr><td class="l"><b>${a}</b></td><td class="l">${b}</td></tr>`).join('')}</table></div>`)}
-    ${sec('1', 'Introducción', `<p>La hipoglucemia es la alteración metabólica más frecuente en el periodo neonatal; afecta al 5-7 % de los recién nacidos (RN) a término y al 3,2-14,7 % de los pretérmino, y puede alcanzar el 50 % en los RN con factores de riesgo.</p>
+    ${sec('Ab', 'Abreviaturas', `<div class="tbl-wrap"><table>${[['ABL', 'Analizador de gasometría (glucemia en muestra de sangre completa)'], ['CIR', 'Restricción del crecimiento intrauterino'], ['GH', 'Hormona de crecimiento'], ['IGF-1', 'Factor de crecimiento similar a la insulina tipo 1'], ['IGFBP-3', 'Proteína transportadora 3 del factor de crecimiento similar a la insulina'], ['IV', 'Intravenoso'], ['Pro-IGF-II', 'Precursor del factor de crecimiento similar a la insulina tipo 2'], ['RN', 'Recién nacido'], ['SG', 'Suero glucosado']].map(([a, b]) => `<tr><td class="l"><b>${a}</b></td><td class="l">${b}</td></tr>`).join('')}</table></div>`)}
+    ${sec('1', 'Introducción', `<p>La hipoglucemia es la alteración metabólica más frecuente en el periodo neonatal; afecta al 5-7 % de los RN a término y al 3,2-14,7 % de los pretérmino, y puede llegar hasta el 50 % de los RN con factores de riesgo.</p>
       <p>Sin embargo, no existen datos suficientes para definir una cifra de glucemia por debajo de la cual habría que intervenir para prevenir la morbilidad. Esto explica que los porcentajes de incidencia de hipoglucemia referidos en las diversas series y estudios estén sujetos a variación. En el presente documento se proponen unos valores para definir la hipoglucemia precoz y persistente.</p>
-      <p>La consecuencia más temida de la hipoglucemia en el RN es el daño neurológico a corto y largo plazo, cuyo riesgo es mayor cuando la hipoglucemia es sintomática. De ahí la importancia de alimentar precozmente a los RN con riesgo de hipoglucemia, así como la determinación seriada de glucemia para detectarla y tratarla precozmente.</p>`)}
+      <p>La consecuencia más temida de la hipoglucemia en el RN es el daño neurológico a corto y largo plazo, cuyo riesgo es mayor cuando la hipoglucemia es sintomática. De ahí la importancia de alimentar precozmente a los RN con riesgo de hipoglucemia, así como la determinación seriada de glucemia para detectar la hipoglucemia y tratarla precozmente.</p>`)}
     ${sec('2', 'Objetivos', `<ol><li>Establecer los valores de glucemia que definen la hipoglucemia neonatal.</li><li>Reconocer los factores de riesgo de hipoglucemia neonatal.</li><li>Prevenir la hipoglucemia sintomática en los RN con factores de riesgo.</li><li>Evitar tratamientos innecesarios en los RN durante el nadir fisiológico.</li><li>Actualizar el manejo de la hipoglucemia en el RN.</li><li>A largo plazo: prevenir las secuelas neurológicas por hipoglucemia.</li></ol>`)}
-    ${sec('3', 'Ámbito de aplicación y población diana', `<p>Este protocolo se aplica a los recién nacidos de 35 o más semanas de gestación con factores de riesgo de hipoglucemia o sin posibilidad de alimentación enteral, atendidos en el Paritorio, la Maternidad y la Unidad Neonatal del Hospital de Montilla.</p><p>El manejo de la hipoglucemia persistente (más allá de las 72 horas de vida) se recoge en los anexos 2 y 3.</p>`)}
+    ${sec('3', 'Ámbito de aplicación y población diana', `<p>Este protocolo se aplica a los RN de 35 o más semanas de gestación con factores de riesgo de hipoglucemia y a los RN que presenten hipoglucemia, atendidos en el Paritorio, la Maternidad y la Unidad Neonatal del Hospital de Montilla.</p><p>El manejo de la hipoglucemia persistente (más allá de las 72 horas de vida) se recoge en el anexo 3.</p>`)}
     ${sec('4', 'Profesionales implicados', `<p>Pediatras, matronas, personal de enfermería y técnicos en cuidados auxiliares de enfermería (TCAE) del Paritorio, la Maternidad y la Unidad Neonatal.</p>`)}
     ${sec('5', 'Definiciones', `<p>Durante la transición normal a la vida extrauterina en el RN a término, la concentración de glucosa sanguínea disminuye durante las dos primeras horas tras el parto, momento en que alcanza su nadir, con una glucemia media de aproximadamente 55 mg/dL y un 95 % de los valores por encima de 25 mg/dL. La concentración de glucosa aumenta progresivamente hasta situarse entre 45 y 80 mg/dL en las primeras 48 horas de vida. Es importante diferenciar esta respuesta fisiológica de la hipoglucemia persistente o recurrente.</p>
       <p>En la tabla siguiente se recogen los valores de hipoglucemia precoz y persistente, así como la glucemia objetivo.</p>${T1}`)}
-    ${sec('6', 'Factores de riesgo para hipoglucemia', `<p>A continuación se detallan los factores que aumentan el riesgo de presentar hipoglucemia en el periodo neonatal:</p>${ul(FACTORES.map(f => f[1]))}
-      <div class="note-box">Los RN con factores de riesgo de hipoglucemia deben iniciar la alimentación en la primera hora de vida. En los RN de riesgo asintomáticos, la primera glucemia capilar se determinará a las 2 horas de vida, coincidiendo con la alimentación. Si el RN presenta síntomas compatibles con hipoglucemia, la glucemia se determinará inmediatamente, sin esperar a las 2 horas.<br><br>Posteriormente, se realizarán controles de glucemia capilar cada 3-6 horas, generalmente antes de las tomas, durante las primeras 24-48 horas de vida (periodo con mayor riesgo de hipoglucemia), hasta que al menos tres mediciones alcancen el objetivo terapéutico.</div>`)}
+    ${sec('6', 'Factores de riesgo para hipoglucemia', `<p>A continuación, se detallan los factores que aumentan el riesgo de presentar hipoglucemia en el periodo neonatal:</p>${ul(FACTORES.map(f => f[1]))}
+      <div class="note-box">Los RN con factores de riesgo de hipoglucemia deben iniciar la alimentación precozmente. En los RN de riesgo asintomáticos, la primera glucemia capilar se determinará a las 2 horas de vida, coincidiendo con la alimentación. Si el RN presenta síntomas compatibles con hipoglucemia, la glucemia se determinará inmediatamente, sin esperar a las 2 horas.<br><br>Posteriormente, se realizarán controles de glucemia capilar cada 3-6 horas, generalmente antes de las tomas, durante las primeras 24-48 horas de vida (periodo con mayor riesgo de hipoglucemia), hasta que al menos tres mediciones alcancen el objetivo terapéutico.</div>`)}
     ${sec('7', 'Síntomas sugerentes de hipoglucemia', `<p>La hipoglucemia puede manifestarse con alguno de los síntomas que se detallan a continuación, aunque hay que tener en cuenta que los RN con hipoglucemia con frecuencia se encuentran <b>asintomáticos</b>, de ahí la recomendación de realizar controles seriados de glucemia en los RN de riesgo.</p>
       <ul><li><b>Síntomas adrenérgicos (activación del sistema nervioso autónomo)</b>: ${ul(['Temblores.', 'Sudoración.', 'Irritabilidad.', 'Taquipnea.', 'Palidez.'])}</li>
       <li><b>Síntomas de neuroglucopenia</b>: ${ul(['Mala alimentación.', 'Succión débil.', 'Llanto débil o agudo.', 'Cambios en el nivel de conciencia.', 'Hipotonía.', 'Convulsiones.'])}</li>
@@ -542,10 +542,10 @@ function renderProto() {
       <tr><td class="l"><b>Nombre</b></td><td class="l">Glucosa 40 % gel oral</td></tr><tr><td class="l"><b>Forma farmacéutica</b></td><td class="l">Gel para mucosa oral</td></tr><tr><td class="l"><b>Presentación</b></td><td class="l">Jeringas precargadas de 3 mL</td></tr>
       <tr><td class="l"><b>Composición</b></td><td class="l">Glucosa 100 g<br>Carboximetilcelulosa 2,5 g (espesante)<br>Agua conservans c.s.p. 250 mL (parabenos)</td></tr><tr><td class="l"><b>Propiedades</b></td><td class="l">Viscosa, incolora e inodora</td></tr><tr><td class="l"><b>Conservación</b></td><td class="l">Conservar en nevera (2-8 °C)</td></tr><tr><td class="l"><b>Caducidad</b></td><td class="l">1 mes</td></tr></table></div><p class="tbl-note">Tabla 3. Fórmula magistral del gel oral de dextrosa al 40 %.</p>
       <p><b>Modo de administración:</b><br>- Secar la boca del RN con una gasa.<br>- Aplicar el gel en la mucosa yugal y masajear la mejilla del RN durante unos segundos.</p>
-      <p><b>Dosis:</b><br>- Primera dosis: 0,5 mL/kg (200 mg/kg) y, después, colocar al pecho si la madre desea lactancia materna, o bien dar una toma de fórmula de inicio (5 mL/kg). Repetir glucemia capilar a los 30 minutos.<br>- Segunda dosis: si persiste la hipoglucemia y el RN sigue asintomático, repetir la misma dosis y, después, colocar al pecho si la madre desea lactancia materna, o bien dar una toma de fórmula de inicio (5 mL/kg).<br>- Si tras la segunda dosis persiste la hipoglucemia, está indicado el ingreso.</p>
+      <p><b>Dosis:</b><br>- Primera dosis: 0,5 mL/kg (200 mg/kg) y, después, colocar al pecho si la madre desea lactancia materna, o bien dar una toma de fórmula de inicio (5 mL/kg). Repetir glucemia capilar a los 30 minutos.<br>- Segunda dosis: si persiste la hipoglucemia y el RN sigue asintomático, repetir la misma dosis y, después, colocar al pecho si la madre desea lactancia materna, o bien dar una toma de fórmula de inicio (8 mL/kg).<br>- Si tras la segunda dosis persiste la hipoglucemia, está indicado el ingreso.</p>
       <p>- Si el RN presenta un segundo episodio de hipoglucemia se pueden administrar hasta 2 dosis más de gel de dextrosa.<br>- En caso de un tercer episodio está indicado el ingreso.</p>`)}
     ${sec('A2', 'Anexo 2 · Tratamiento con glucosa intravenosa', `<p><b>1. Criterios para iniciar tratamiento con glucosa intravenosa:</b></p><p>1.1. RN con hipoglucemia <b>sin posibilidad de alimentación enteral</b>.<br>1.2. RN con hipoglucemia y <b>síntomas moderados o graves</b>.<br>1.3. RN con hipoglucemia <b>asintomática y glucemia &lt; 30 mg/dL</b> tras una <b>primera corrección</b> con gel de dextrosa y toma (pecho o fórmula de inicio 5 mL/kg).<br>1.4. RN con hipoglucemia <b>asintomática y glucemia &lt; 40 mg/dL</b> tras una <b>segunda corrección</b> con gel de dextrosa y toma (pecho o fórmula de inicio 5 mL/kg; 8 mL/kg si no se dispone de gel).</p>
-      <p><b>2. Dosis</b>:</p><p>2.1. Iniciar con <b>suero glucosado al 10 % a 80 mL/kg/día</b> (5,5 mg/kg/min de glucosa).<br>2.2. Reservar la administración de <b>bolos</b> de glucosa para las hipoglucemias <b>sintomáticas:</b> 200 mg/kg (2 mL/kg de suero glucosado 10 %) en 5-10 minutos.<br>2.3. Aporte total máximo de líquidos en las primeras 72 h de vida (intravenoso y oral): 100 mL/kg/día (para prevenir la hiponatremia).<br>2.4. Medir la glucosa venosa a los 30-45 minutos de iniciada la infusión de glucosa intravenosa, y a los 30-45 minutos después de cada modificación de dosis.<br>2.5. El límite superior de glucemia recomendado es <b>90-100 mg/dL</b>.<br>2.6. Si son necesarios aportes superiores a 10-12 mg/kg/min o 160 mL/kg/día, considerar otras opciones terapéuticas.</p>
+      <p><b>2. Dosis</b>:</p><p>2.1. Iniciar con <b>suero glucosado al 10 % a 80 mL/kg/día</b> (5,6 mg/kg/min de glucosa).<br>2.2. Reservar la administración de <b>bolos</b> de glucosa para las hipoglucemias <b>sintomáticas:</b> 200 mg/kg (2 mL/kg de suero glucosado 10 %) en 5-10 minutos.<br>2.3. Aporte total máximo de líquidos en las primeras 72 h de vida (intravenoso y oral): 100 mL/kg/día (para prevenir la hiponatremia).<br>2.4. Medir la glucosa (capilar inicialmente, y comprobar con venosa según cifras y evolución) a los 30-45 minutos de iniciada la infusión de glucosa intravenosa, y 30-45 minutos después de cada modificación de dosis.<br>2.5. El límite superior de glucemia recomendado es <b>90-100 mg/dL</b>.<br>2.6. Si son necesarios aportes superiores a 10-12 mg/kg/min o 160 mL/kg/día, considerar otras opciones terapéuticas.</p>
       <p><b>3. Guía para el ajuste de aportes intravenosos</b></p><div class="tbl-wrap"><table><tr><th>Glucemia preprandial (mg/dL)</th><th>Variación en la perfusión de glucosa (mg/kg/min)</th></tr>
       <tr><td class="hipo">50-60</td><td class="hipo">Disminuir 0,4</td></tr><tr><td class="hipo">60-70</td><td class="hipo">Disminuir 0,8</td></tr><tr><td class="hipo">70-90</td><td class="hipo">Disminuir 1,2</td></tr><tr><td class="hipo">&gt; 90</td><td class="hipo">Disminuir 1,6</td></tr><tr><td class="ok">&lt; 40</td><td class="ok">Aumentar 0,8</td></tr><tr><td class="ok">40-50</td><td class="ok">Aumentar 0,4 (solo si la previa fue &lt; 50 mg/dL)</td></tr></table></div><p class="tbl-note">Tabla 4. Guía para el ajuste de aportes intravenosos.</p>
       <p>✴ Límite superior de glucemia 90-100 mg/dL.<br>✴ 0,4 mg/kg/min equivalen a 0,25 mL/kg/h de suero glucosado al 10 %.<br>✴ En RN de más de 72 horas, con glucemias de 50-60 mg/dL mantener el aporte hasta alcanzar el objetivo de &gt; 60 mg/dL.</p>
@@ -557,7 +557,7 @@ function renderProto() {
       <tr><td class="l"><b>Vía periférica</b></td><td>12,5 % (hasta 15 %)</td><td>694 (833)</td></tr><tr><td class="l"><b>Catéter venoso umbilical en posición baja (flujo libre)</b></td><td>12,5 %</td><td>694</td></tr><tr><td class="l"><b>Catéter venoso central (incluye umbilical)</b></td><td>25 %</td><td>1388</td></tr><tr><td class="l"><b>Catéter arterial umbilical (<span style="color:var(--hipo)">no recomendado</span>; solo hasta disponer de vía venosa)</b></td><td>12,5 %</td><td>694</td></tr></table></div><p class="tbl-note">Tabla 6. Osmolaridad máxima soportada en función del tipo de acceso vascular.</p>`)}
     ${sec('A3', 'Anexo 3 · “Muestra crítica” en hipoglucemia persistente', `<p>Ante una hipoglucemia &lt; 50 mg/dL después de las 72 horas de vida, extraer <b><i>muestra crítica</i></b> de sangre.</p><p>La extracción debe realizarse durante la hipoglucemia, ya sea espontánea o inducida por un ayuno controlado.</p>
       <div class="tbl-wrap"><table><tr><th>Muestra</th><th>Determinaciones</th></tr>
-      <tr><td class="l hipo" style="vertical-align:top"><b>Sangre:</b><br><span style="font-weight:400;color:var(--ink)">Congelar la mayor cantidad posible de suero/plasma, para estudios posteriores.</span></td><td class="l">- Glucosa.<br>- Otros metabolitos: Beta-hidroxibutirato. Ácidos grasos libres. Lactato. Piruvato. Glicerol. Alanina.<br>- Función hepática y amonio.<br>- Gasometría, ionograma (hiato aniónico).<br>- Insulina, péptido C.<br>- Cortisol, hormona de crecimiento (GH).<br>- Carnitina (total y esterificada).<br>- Acilcarnitinas.<br>- Ocasionalmente (no requieren extracción en hipoglucemia): Aminoácidos. IGFBP-1. IGF-1. Pro-IGF-II. Tiroxina libre, tirotropina. Isoformas de transferrina.</td></tr>
+      <tr><td class="l hipo" style="vertical-align:top"><b>Sangre:</b><br><span style="font-weight:400;color:var(--ink)">Congelar la mayor cantidad posible de suero/plasma, para estudios posteriores.</span></td><td class="l">- Glucosa.<br>- Otros metabolitos: Beta-hidroxibutirato. Ácidos grasos libres. Lactato. Piruvato. Glicerol. Alanina.<br>- Función hepática y amonio.<br>- Gasometría, ionograma (hiato aniónico).<br>- Insulina, péptido C.<br>- Cortisol, hormona de crecimiento (GH).<br>- Carnitina (total y esterificada).<br>- Acilcarnitinas.<br>- Ocasionalmente (no requieren extracción en hipoglucemia): Aminoácidos. IGFBP-3. IGF-1. Pro-IGF-II. Tiroxina libre, tirotropina. Isoformas de transferrina.</td></tr>
       <tr><td class="l amb" style="vertical-align:top"><b>Orina</b>:<br><span style="font-weight:400;color:var(--ink)">Congelar una alícuota de la primera micción tras la hipoglucemia.</span></td><td class="l">- pH, iones.<br>- Cuerpos cetónicos.<br>- Sustancias reductoras.<br>- Ácidos orgánicos.<br>- Perfil de acilglicinas.</td></tr></table></div><p class="tbl-note">Tabla 7. Determinaciones de la “muestra crítica” en sangre y orina.</p>`)}
     </div>`;
 }
