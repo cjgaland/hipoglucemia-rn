@@ -6,6 +6,8 @@
 // Versiones de la app (se listan en Info, la más reciente arriba). Al publicar: añadir una entrada AL PRINCIPIO
 // y subir también VERSION en sw.js (hipo-rn-v<número>). La portada y la pestaña Info muestran NOVEDADES[0].
 const NOVEDADES = [
+  { version: '14', fecha: '14/10/2026', titulo: 'Autoría en la portada', cambios: [
+    'La portada muestra las autoras del protocolo, su edición y fecha, y los autores de la aplicación.'] },
   { version: '13', fecha: '14/10/2026', titulo: 'Corrección del aviso de actualización', cambios: [
     'El aviso «Nueva versión disponible» aparece también sobre la portada (antes quedaba oculto detrás).',
     'Tras actualizar se carga siempre la versión nueva (antes podía seguir viéndose la anterior unos minutos).'] },
@@ -649,7 +651,7 @@ function renderInfo() {
   $('#tab-info').innerHTML = `
     <div class="card navy"><span class="step">Protocolo de actuación</span><h2>Protocolo de hipoglucemia en el recién nacido</h2>
       <p class="lead">Servicio de Pediatría · Hospital de Montilla</p>
-      <p class="lead" style="margin-top:-4px">App: versión ${APP_VERSION.num} · ${APP_VERSION.fecha} · autora: María Luisa Becerra, Pediatra · <button type="button" class="linklike" data-portada>Ver la portada</button></p>
+      <p class="lead" style="margin-top:-4px">App: versión ${APP_VERSION.num} · ${APP_VERSION.fecha} · autores: María Luisa Becerra Martínez, Pediatra, y Carlos J. Galán Doval, Médico de Familia y Urgencias · <button type="button" class="linklike" data-portada>Ver la portada</button></p>
       <div class="kpis"><div class="kpi"><div class="k">Versión</div><div class="v" style="font-size:20px">Edición 01</div><div class="s">06/10/2026</div></div><div class="kpi"><div class="k">Edición anterior</div><div class="v" style="font-size:20px">Edición 00</div><div class="s">25/03/2023</div></div></div>
       <p><b>Elaborado:</b> María Luisa Becerra Martínez y Marta Cruz Cañete, Facultativas Especialistas de Área (FEA) de Pediatría, Hospital de Montilla.<br><b>Revisado:</b> Francisca Luisa Gallardo Hernández, Jefa de Sección de Pediatría, Hospital de Montilla.</p></div>
     <div class="card amb"><span class="step">Importante</span><h2>Uso de esta herramienta</h2>
