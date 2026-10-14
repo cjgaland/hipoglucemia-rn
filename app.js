@@ -6,6 +6,8 @@
 // Versiones de la app (se listan en Info, la más reciente arriba). Al publicar: añadir una entrada AL PRINCIPIO
 // y subir también VERSION en sw.js (hipo-rn-v<número>). La portada y la pestaña Info muestran NOVEDADES[0].
 const NOVEDADES = [
+  { version: '15', fecha: '14/10/2026', titulo: 'Aviso de actualización en el ordenador', cambios: [
+    'Con la app abierta en el ordenador, las versiones nuevas se detectan al volver a la ventana y cada 15 minutos (antes solo al abrirla).'] },
   { version: '14', fecha: '14/10/2026', titulo: 'Autoría en la portada', cambios: [
     'La portada muestra las autoras del protocolo, su edición y fecha, y los autores de la aplicación.'] },
   { version: '13', fecha: '14/10/2026', titulo: 'Corrección del aviso de actualización', cambios: [
@@ -847,6 +849,8 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
       const comprobar = () => { reg.update().catch(() => { /* sin conexión: se comprobará más tarde */ }); };
       comprobar();
       document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') comprobar(); });   // al volver a la app (iPhone)
+      window.addEventListener('focus', comprobar);                  // al hacer clic en la ventana (ordenador)
+      setInterval(comprobar, 15 * 60 * 1000);                       // y cada 15 minutos si sigue abierta
     }).catch(() => { /* sin modo sin conexión */ });
   });
 }
