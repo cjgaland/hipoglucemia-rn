@@ -485,15 +485,15 @@ function runCalc(box) { const f = CALC[box.dataset.calc]; if (f) f(box); }
 // PROTOCOLO (contenido íntegro)
 // =====================================================================
 // Protocolo completo e infografía en PDF (carpeta Protocolo/)
-const PDFS = [
-  ['Formato normal', '13 páginas', 'Protocolo/Protocolo hipoglucemia en recién nacidos (nuevo diseño).pdf'],
-  ['Formato revista', '8 páginas, a dos columnas', 'Protocolo/Protocolo hipoglucemia en recién nacidos (formato revista).pdf'],
-  ['Infografía', 'Resumen visual en una página (A3 apaisado)', 'Protocolo/Infografía hipoglucemia en recién nacidos.pdf'],
+const PDFS = [   // [título, descripción, PDF, clave de las páginas en Protocolo/paginas/ (scripts/paginas_app.sh)]
+  ['Formato normal', '13 páginas', 'Protocolo/Protocolo hipoglucemia en recién nacidos (nuevo diseño).pdf', 'normal'],
+  ['Formato revista', '8 páginas, a dos columnas', 'Protocolo/Protocolo hipoglucemia en recién nacidos (formato revista).pdf', 'revista'],
+  ['Infografía', 'Resumen visual en una página (A3 apaisado)', 'Protocolo/Infografía hipoglucemia en recién nacidos.pdf', 'infografia'],
 ];
 function pdfCard() {
   return `<div class="card navy"><span class="step">Documento completo</span><h2>Protocolo en PDF e infografía</h2>
-    ${PDFS.map(([t, d, f]) => `<div class="dose"><div class="what"><b>${t}</b><small>${d}</small></div>
-      <div class="row"><a class="btn small ghost" href="${encodeURI(f)}" target="_blank" rel="noopener">Ver</a><a class="btn small" href="${encodeURI(f)}" download>Descargar</a></div></div>`).join('')}</div>`;
+    ${PDFS.map(([t, d], i) => `<div class="dose"><div class="what"><b>${t}</b><small>${d}</small></div>
+      <div class="row"><button type="button" class="btn small ghost" data-ver="${i}">Ver</button><button type="button" class="btn small" data-descargar="${i}">Descargar</button></div></div>`).join('')}</div>`;
 }
 
 function renderProto() {
@@ -527,7 +527,7 @@ function renderProto() {
       <ul><li><b>Síntomas adrenérgicos (activación del sistema nervioso autónomo)</b>: ${ul(['Temblores.', 'Sudoración.', 'Irritabilidad.', 'Taquipnea.', 'Palidez.'])}</li>
       <li><b>Síntomas de neuroglucopenia</b>: ${ul(['Mala alimentación.', 'Succión débil.', 'Llanto débil o agudo.', 'Cambios en el nivel de conciencia.', 'Hipotonía.', 'Convulsiones.'])}</li>
       <li><b>Otros</b>: ${ul(['Apnea.', 'Bradicardia.', 'Cianosis.', 'Hipotermia.'])}</li></ul><p class="tbl-note">Tabla 2. Síntomas sugerentes de hipoglucemia.</p>`)}
-    ${sec('8', 'Algoritmo de actuación ante la hipoglucemia precoz', `<a href="img/algoritmo.png" target="_blank" rel="noopener"><img class="fig" src="img/algoritmo.png" alt="Algoritmo de actuación ante la hipoglucemia precoz" loading="lazy"></a><p class="tbl-note">Toque la imagen para ampliarla.</p>
+    ${sec('8', 'Algoritmo de actuación ante la hipoglucemia precoz', `<button type="button" class="fig-btn" data-ver-img="img/algoritmo.png" data-titulo="Algoritmo de actuación" aria-label="Ampliar el algoritmo"><img class="fig" src="img/algoritmo.png" alt="Algoritmo de actuación ante la hipoglucemia precoz" loading="lazy"></button><p class="tbl-note">Toque la imagen para ampliarla.</p>
       <div class="note-box"><sup><b>1</b></sup> La glucemia capilar debe confirmarse lo antes posible con una muestra de sangre venosa, que ha de procesarse con rapidez para evitar valores falsamente bajos (los eritrocitos de la muestra consumen glucosa). No obstante, el tratamiento debe iniciarse sin esperar a la confirmación.<br>La glucemia capilar es aproximadamente un 15 % más baja que la plasmática.<br>Para la determinación de la glucemia capilar, emplear preferiblemente el dispositivo de punción automático (pinchador), disponible tanto en Paritorio como en la Unidad Neonatal, en lugar de lanceta o aguja intramuscular.</div>
       <div class="note-box"><sup><b>2</b></sup> Administrar primero el gel de dextrosa y posteriormente ofrecer la toma. Si no se dispone de dicho gel, colocar al pecho si la madre desea lactancia materna, o bien dar una toma de fórmula de inicio (5 mL/kg).</div>
       <div class="note-box"><sup><b>3</b></sup> Si hay retraso en conseguir un acceso venoso, administrar 0,5 mL/kg de gel de dextrosa al 40 %.</div>
@@ -698,6 +698,79 @@ document.addEventListener('toggle', (e) => {
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && e.target.matches('#tab-guia input[data-s]')) { e.preventDefault(); e.target.blur(); }
 });
+
+// =====================================================================
+// Visor de documentos
+// En una app instalada (sobre todo en iPhone) un PDF abierto ocupa la ventana y no hay forma de volver.
+// Por eso los documentos se ven aquí como imágenes de sus páginas (Protocolo/paginas/, generadas con
+// scripts/paginas_app.sh), con «Volver» siempre visible; el botón o gesto «Atrás» del móvil también lo cierra.
+// =====================================================================
+let PAGINAS = null;
+const paginas = async () => PAGINAS || (PAGINAS = await fetch('Protocolo/paginas/paginas.json').then(r => r.json()));
+const ZOOMS = [100, 150, 200, 300];
+let visorZoom = 0;
+
+function abrirVisor(titulo, imgs, i = null) {
+  cerrarVisor(true);
+  visorZoom = 0;
+  const v = document.createElement('div');
+  v.id = 'visor'; v.setAttribute('role', 'dialog'); v.setAttribute('aria-modal', 'true'); v.setAttribute('aria-label', titulo);
+  v.innerHTML = `<div class="visor-bar">
+      <button type="button" class="visor-volver" data-visor="cerrar">← Volver</button>
+      <span class="visor-tit">${esc(titulo)}</span>
+      <button type="button" class="visor-ic" data-visor="menos" aria-label="Reducir">−</button>
+      <button type="button" class="visor-ic" data-visor="mas" aria-label="Ampliar">+</button>
+      ${i != null ? `<button type="button" class="visor-ic" data-descargar="${i}" aria-label="Descargar el PDF">⤓</button>` : ''}
+    </div>
+    <div class="visor-body"><div class="visor-pags">${imgs.map((src, k) => `<img src="${encodeURI(src)}" alt="${esc(titulo)}${imgs.length > 1 ? ` · página ${k + 1} de ${imgs.length}` : ''}" ${k > 1 ? 'loading="lazy"' : ''}>`).join('')}</div></div>`;
+  document.body.appendChild(v);
+  document.documentElement.classList.add('visor-abierto');
+  history.pushState({ visor: true }, '');
+  v.querySelector('.visor-volver').focus();
+}
+function cerrarVisor(sinHistoria = false) {
+  const v = $('#visor'); if (!v) return;
+  v.remove(); document.documentElement.classList.remove('visor-abierto');
+  if (!sinHistoria && history.state && history.state.visor) history.back();
+}
+function zoomVisor(d) {
+  visorZoom = Math.max(0, Math.min(ZOOMS.length - 1, visorZoom + d));
+  const p = $('#visor .visor-pags'); if (p) p.style.width = ZOOMS[visorZoom] + '%';
+}
+async function verDocumento(i) {
+  const [t, , , clave] = PDFS[i];
+  try {
+    const n = (await paginas())[clave];
+    abrirVisor(t, Array.from({ length: n }, (_, k) => `Protocolo/paginas/${clave}-${String(k + 1).padStart(2, '0')}.jpg`), i);
+  } catch (e) { alert('No se ha podido abrir el documento. Compruebe la conexión e inténtelo de nuevo.'); }
+}
+// Descargar: en el móvil, menú «Compartir» del sistema (Guardar en Archivos, imprimir, enviar…), que no saca de la app;
+// en el ordenador, descarga normal.
+async function descargar(i) {
+  const [t, , f] = PDFS[i], nombre = f.split('/').pop();
+  const movil = matchMedia('(pointer: coarse)').matches;
+  if (movil && navigator.canShare) {
+    try {
+      const blob = await fetch(f).then(r => { if (!r.ok) throw new Error(r.status); return r.blob(); });
+      const file = new File([blob], nombre, { type: 'application/pdf' });
+      if (navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: t }); return; }
+    } catch (e) { if (e && e.name === 'AbortError') return; }
+  }
+  const a = document.createElement('a'); a.href = encodeURI(f); a.download = nombre;
+  document.body.appendChild(a); a.click(); a.remove();
+}
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-ver],[data-ver-img],[data-descargar],[data-visor]'); if (!b) return;
+  e.preventDefault();
+  if (b.dataset.ver != null) verDocumento(+b.dataset.ver);
+  else if (b.dataset.verImg) abrirVisor(b.dataset.titulo || 'Imagen', [b.dataset.verImg]);
+  else if (b.dataset.descargar != null) descargar(+b.dataset.descargar);
+  else if (b.dataset.visor === 'cerrar') cerrarVisor();
+  else if (b.dataset.visor === 'mas') zoomVisor(1);
+  else if (b.dataset.visor === 'menos') zoomVisor(-1);
+});
+window.addEventListener('popstate', () => cerrarVisor(true));
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('#visor')) cerrarVisor(); });
 
 // =====================================================================
 // Arranque

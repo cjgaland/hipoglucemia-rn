@@ -153,3 +153,17 @@ mark { background: #FFE58A; color: inherit; border-radius: 3px; }
 .footer-note { color: var(--muted); font-size: 12.5px; text-align: center; margin: 24px 0 8px; }
 .hidden { display: none !important; }
 @media print { .topbar, .timer { display: none; } .card, details.sec { box-shadow: none; break-inside: avoid; } details.sec { display: block; } }
+
+/* Visor de documentos (ver app.js: los PDF no se abren directamente porque en la app instalada no se puede volver) */
+html.visor-abierto, html.visor-abierto body { overflow: hidden; }
+#visor { position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column; background: var(--page); }
+.visor-bar { display: flex; align-items: center; gap: 8px; background: var(--navy); color: #fff; padding: calc(env(safe-area-inset-top) + 8px) 10px 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, .2); }
+.visor-volver { border: 0; background: #fff; color: var(--navy); font-weight: 800; font-size: 15px; border-radius: 10px; padding: 9px 14px; min-height: 42px; cursor: pointer; flex: none; }
+.visor-tit { flex: 1; min-width: 0; font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.visor-ic { border: 1.5px solid rgba(255, 255, 255, .55); background: transparent; color: #fff; font-size: 20px; font-weight: 700; width: 42px; height: 42px; border-radius: 10px; cursor: pointer; flex: none; }
+.visor-body { flex: 1; overflow: auto; -webkit-overflow-scrolling: touch; padding: 12px 10px calc(env(safe-area-inset-bottom) + 16px); }
+.visor-pags { width: 100%; max-width: 1100px; margin: 0 auto; }
+.visor-pags[style*="width"] { max-width: none; }
+.visor-pags img { display: block; width: 100%; height: auto; margin: 0 auto 12px; background: #fff; border-radius: 4px; box-shadow: 0 1px 8px rgba(0, 0, 0, .18); }
+.fig-btn { display: block; width: 100%; padding: 0; border: 0; background: none; cursor: zoom-in; }
+@media (max-width: 420px) { .visor-tit { font-size: 14px; } }
