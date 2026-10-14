@@ -3,8 +3,36 @@
    Sin dependencias. Ningún dato sale del dispositivo. */
 'use strict';
 
-// Versión de la app: subirla a la vez que VERSION en sw.js (se muestra en la portada y en Info).
-const APP_VERSION = { num: '11', fecha: '14/10/2026' };
+// Versiones de la app (se listan en Info, la más reciente arriba). Al publicar: añadir una entrada AL PRINCIPIO
+// y subir también VERSION en sw.js (hipo-rn-v<número>). La portada y la pestaña Info muestran NOVEDADES[0].
+const NOVEDADES = [
+  { version: '12', fecha: '14/10/2026', titulo: 'Historial de versiones y vuelta a la portada', cambios: [
+    'Al tocar el logo o el título de la barra superior se vuelve a la portada.',
+    'Historial de versiones en la pestaña Info.',
+    'Los documentos (PDF e infografía) se ven y descargan desde la pestaña Protocolo.'] },
+  { version: '11', fecha: '14/10/2026', titulo: 'Portada y aviso de actualización', cambios: [
+    'Portada al abrir la app, con el objetivo, la autoría y la versión.',
+    'Cuando hay una versión nueva aparece el aviso «Nueva versión disponible» con el botón «Actualizar».'] },
+  { version: '10', fecha: '14/10/2026', titulo: 'Visor de documentos', cambios: [
+    'El protocolo y la infografía se ven dentro de la app, con el botón «Volver» (antes, en la app instalada, no se podía volver).',
+    'En el móvil, «Descargar» abre el menú Compartir (guardar en Archivos, imprimir o enviar).'] },
+  { version: '9', fecha: '14/10/2026', titulo: 'Segunda corrección y criterio de glucosa intravenosa', cambios: [
+    '2.ª corrección: gel y toma obligatoria de fórmula de inicio de 5 mL/kg y, después, pecho si la madre lo desea; sin gel, fórmula de inicio de 8 mL/kg.',
+    'Glucosa intravenosa si tras la 2.ª corrección la glucemia es < 40 mg/dL (0-24 h) o < 46 mg/dL (24-72 h) (Anexo 2, 1.4).',
+    'Actualizados la guía, las calculadoras, los documentos, el algoritmo y la infografía.'] },
+  { version: '8', fecha: '13/10/2026', titulo: 'Infografía', cambios: ['Infografía del protocolo (A3) para ver y descargar.'] },
+  { version: '7', fecha: '13/10/2026', titulo: 'Revisión 2026 del protocolo', cambios: [
+    'Cambios de las autoras: SG 10 % a 80 mL/kg/día = 5,6 mg/kg/min; alimentación precoz; lactancia materna a demanda o artificial cada 3 horas; control de glucosa capilar comprobado con venosa; nuevo ámbito de aplicación; IGFBP-3.',
+    'Fórmula de inicio de 8 mL/kg en la 2.ª corrección (modificado en la versión 9).'] },
+  { version: '6', fecha: '12/10/2026', titulo: 'Formato revista', cambios: ['Nueva maquetación del protocolo en formato revista (PDF).'] },
+  { version: '5', fecha: '11/10/2026', titulo: 'Protocolo en PDF', cambios: ['Protocolo completo en PDF (formato normal y formato revista) para ver y descargar.'] },
+  { version: '4', fecha: '11/10/2026', titulo: 'Protocolo revisado por las autoras', cambios: [
+    'Primer control de glucemia a las 2 horas, objetivos ≥ 40 y ≥ 46 mg/dL, lactancia, ajuste de la Tabla 4 a partir de las 72 horas, umbrales unificados y bibliografía actualizada.'] },
+  { version: '3', fecha: '08/10/2026', titulo: 'Buscador del protocolo', cambios: ['El buscador no distingue mayúsculas ni acentos y admite varias palabras.'] },
+  { version: '2', fecha: '08/10/2026', titulo: 'Protocolo en acordeón', cambios: ['Los apartados del protocolo se abren de uno en uno.'] },
+  { version: '1', fecha: '08/10/2026', titulo: 'Primera versión', cambios: ['Guía interactiva paso a paso y calculadoras del protocolo de hipoglucemia neonatal.'] },
+];
+const APP_VERSION = { num: NOVEDADES[0].version, fecha: NOVEDADES[0].fecha };
 
 // =====================================================================
 // Utilidades
@@ -618,7 +646,7 @@ function renderInfo() {
   $('#tab-info').innerHTML = `
     <div class="card navy"><span class="step">Protocolo de actuación</span><h2>Protocolo de hipoglucemia en el recién nacido</h2>
       <p class="lead">Servicio de Pediatría · Hospital de Montilla</p>
-      <p class="lead" style="margin-top:-4px">App: versión ${APP_VERSION.num} · ${APP_VERSION.fecha} · autora: María Luisa Becerra, Pediatra</p>
+      <p class="lead" style="margin-top:-4px">App: versión ${APP_VERSION.num} · ${APP_VERSION.fecha} · autora: María Luisa Becerra, Pediatra · <button type="button" class="linklike" data-portada>Ver la portada</button></p>
       <div class="kpis"><div class="kpi"><div class="k">Versión</div><div class="v" style="font-size:20px">Edición 01</div><div class="s">06/10/2026</div></div><div class="kpi"><div class="k">Edición anterior</div><div class="v" style="font-size:20px">Edición 00</div><div class="s">25/03/2023</div></div></div>
       <p><b>Elaborado:</b> María Luisa Becerra Martínez y Marta Cruz Cañete, Facultativas Especialistas de Área (FEA) de Pediatría, Hospital de Montilla.<br><b>Revisado:</b> Francisca Luisa Gallardo Hernández, Jefa de Sección de Pediatría, Hospital de Montilla.</p></div>
     <div class="card amb"><span class="step">Importante</span><h2>Uso de esta herramienta</h2>
@@ -626,12 +654,15 @@ function renderInfo() {
       <li>Compruebe siempre las dosis antes de administrarlas.</li>
       <li>Los cálculos de aportes de glucosa se realizan con la fórmula del Anexo 2 (punto 4).</li>
 </ul></div>
-    ${pdfCard()}
     <div class="card ok"><span class="step">Privacidad</span><h2>Ningún dato sale del dispositivo</h2>
       <p>Los datos que se introducen (peso, horas de vida, glucemias…) solo se usan para los cálculos en pantalla. No se guardan ni se envían a ningún servidor. Al pulsar «Nuevo paciente» o cerrar la página se borran.</p></div>
     <div class="card"><span class="step">Instalación</span><h2>Usarla como una app</h2>
       <p><b>iPhone / iPad (Safari):</b> botón Compartir → «Añadir a pantalla de inicio».<br><b>Android (Chrome):</b> menú ⋮ → «Instalar aplicación» o «Añadir a pantalla de inicio».<br><b>Ordenador (Chrome / Edge):</b> icono de instalar en la barra de direcciones.</p>
-      <p class="lead">Una vez abierta, funciona también sin conexión.</p></div>`;
+      <p class="lead">Una vez abierta, funciona también sin conexión.</p></div>
+    <div class="card"><span class="step">Historial</span><h2>Versiones de la app</h2>
+      <p class="lead">El protocolo completo, en PDF, y la infografía están en la pestaña <b>Protocolo</b>.</p>
+      <ol class="versiones">${NOVEDADES.map((v, i) => `<li${i === 0 ? ' class="actual"' : ''}><div class="v-cab"><b>Versión ${v.version}</b>${i === 0 ? ' <span class="v-tag">actual</span>' : ''}<span class="v-fecha">${v.fecha}</span></div>
+        <div class="v-tit">${esc(v.titulo)}</div><ul class="clean">${v.cambios.map(c => `<li>${esc(c)}</li>`).join('')}</ul></li>`).join('')}</ol></div>`;
 }
 
 // =====================================================================
@@ -789,7 +820,12 @@ showTab(['guia', 'calc', 'proto', 'info'].includes(startTab) ? startTab : 'guia'
   const p = $('#portada'), v = $('#portada-version');
   if (v) v.textContent = `Versión ${APP_VERSION.num} · ${APP_VERSION.fecha}`;
   const entrar = () => { p.hidden = true; try { sessionStorage.setItem('hipo-portada', '1'); } catch (e) { /* sin almacenamiento */ } };
-  if (p && !p.hidden) { $('#portada-entrar').addEventListener('click', entrar); $('#portada-entrar').focus(); }
+  const mostrar = () => { p.hidden = false; $('#portada-entrar').focus(); };
+  $('#portada-entrar').addEventListener('click', entrar);
+  if (!p.hidden) $('#portada-entrar').focus();
+  // Volver a la portada: tocando el logo o el título de la barra superior, o «Ver la portada» en Info
+  document.addEventListener('click', (e) => { if (e.target.closest('.topbar .brand, [data-portada]')) mostrar(); });
+  $('.topbar .brand').addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); mostrar(); } });
 }
 
 // Actualizaciones (mismo patrón que HidratIV y DosisPed): la versión nueva espera instalada y se avisa con

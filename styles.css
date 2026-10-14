@@ -188,3 +188,22 @@ html.visor-abierto, html.visor-abierto body { overflow: hidden; }
 .update-banner button { border: 0; background: #fff; color: var(--navy); font-weight: 800; font-size: 14px; border-radius: 16px; padding: 8px 14px; cursor: pointer; white-space: nowrap; }
 .update-banner button:disabled { opacity: .6; }
 @media (max-width: 640px) { .update-banner { bottom: calc(env(safe-area-inset-bottom) + 84px); } }
+
+/* Marca de la barra superior: vuelve a la portada */
+.topbar .brand { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.topbar .brand:focus-visible { outline: 2px solid var(--sky); outline-offset: 4px; border-radius: 6px; }
+.linklike { border: 0; background: none; padding: 0; color: var(--accent); font: inherit; text-decoration: underline; cursor: pointer; }
+
+/* Historial de versiones (Info) */
+.versiones { list-style: none; margin: 8px 0 0; padding: 0; }
+.versiones > li { padding: 10px 0 10px 14px; border-left: 3px solid var(--rule); margin-left: 4px; position: relative; }
+.versiones > li::before { content: ''; position: absolute; left: -7px; top: 15px; width: 11px; height: 11px; border-radius: 50%; background: var(--card); border: 2px solid var(--rule); }
+.versiones > li.actual { border-left-color: var(--accent); }
+.versiones > li.actual::before { background: var(--accent); border-color: var(--accent); }
+.v-cab { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.v-cab b { color: var(--navy); font-size: 15px; }
+.v-tag { font-size: 11px; font-weight: 700; color: #fff; background: var(--accent); border-radius: 6px; padding: 1px 7px; }
+.v-fecha { color: var(--muted); font-size: 13px; margin-left: auto; }
+.v-tit { font-weight: 600; margin: 2px 0 3px; }
+.versiones ul.clean { margin: 0; font-size: 14px; color: var(--ink); }
+@media (prefers-color-scheme: dark) { .v-cab b { color: #DCE7F3; } }
