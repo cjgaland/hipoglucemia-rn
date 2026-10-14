@@ -167,3 +167,24 @@ html.visor-abierto, html.visor-abierto body { overflow: hidden; }
 .visor-pags img { display: block; width: 100%; height: auto; margin: 0 auto 12px; background: #fff; border-radius: 4px; box-shadow: 0 1px 8px rgba(0, 0, 0, .18); }
 .fig-btn { display: block; width: 100%; padding: 0; border: 0; background: none; cursor: zoom-in; }
 @media (max-width: 420px) { .visor-tit { font-size: 14px; } }
+
+/* Portada (al abrir la app) */
+.portada { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; overflow: auto; padding: calc(env(safe-area-inset-top) + 24px) 24px calc(env(safe-area-inset-bottom) + 24px);
+  background: radial-gradient(120% 80% at 50% 0%, #2A4A75 0%, var(--navy) 60%, #152B47 100%); color: #fff; text-align: center; }
+.portada[hidden] { display: none; }
+.portada-in { max-width: 460px; display: flex; flex-direction: column; align-items: center; }
+.portada-logo { width: 128px; height: 128px; border-radius: 28px; box-shadow: 0 10px 30px rgba(0, 0, 0, .35); margin-bottom: 22px; }
+.portada-kicker { font-size: 12px; letter-spacing: 1.6px; text-transform: uppercase; color: var(--sky); font-weight: 700; }
+.portada h1 { font-size: 30px; line-height: 1.12; margin: 8px 0 14px; font-weight: 800; }
+.portada-obj { font-size: 16.5px; line-height: 1.45; color: #DCE7F3; margin: 0 0 26px; }
+.portada-btn { min-width: 200px; font-size: 17px; padding: 13px 28px; background: #fff; color: var(--navy); border-radius: 12px; }
+.portada-meta { margin-top: 30px; font-size: 13px; line-height: 1.6; color: #9FB2C7; }
+
+/* Aviso de nueva versión */
+.update-banner { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 24px); transform: translateX(-50%); z-index: 150;
+  display: flex; gap: 12px; align-items: center; max-width: calc(100vw - 32px); background: var(--navy); color: #fff;
+  padding: 10px 12px 10px 18px; border-radius: 24px; font-weight: 600; font-size: 14.5px; box-shadow: 0 8px 24px rgba(0, 0, 0, .3); }
+.update-banner span { white-space: nowrap; }
+.update-banner button { border: 0; background: #fff; color: var(--navy); font-weight: 800; font-size: 14px; border-radius: 16px; padding: 8px 14px; cursor: pointer; white-space: nowrap; }
+.update-banner button:disabled { opacity: .6; }
+@media (max-width: 640px) { .update-banner { bottom: calc(env(safe-area-inset-bottom) + 84px); } }

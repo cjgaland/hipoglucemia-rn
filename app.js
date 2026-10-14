@@ -3,6 +3,9 @@
    Sin dependencias. Ningún dato sale del dispositivo. */
 'use strict';
 
+// Versión de la app: subirla a la vez que VERSION en sw.js (se muestra en la portada y en Info).
+const APP_VERSION = { num: '11', fecha: '14/10/2026' };
+
 // =====================================================================
 // Utilidades
 // =====================================================================
@@ -615,6 +618,7 @@ function renderInfo() {
   $('#tab-info').innerHTML = `
     <div class="card navy"><span class="step">Protocolo de actuación</span><h2>Protocolo de hipoglucemia en el recién nacido</h2>
       <p class="lead">Servicio de Pediatría · Hospital de Montilla</p>
+      <p class="lead" style="margin-top:-4px">App: versión ${APP_VERSION.num} · ${APP_VERSION.fecha} · autora: María Luisa Becerra, Pediatra</p>
       <div class="kpis"><div class="kpi"><div class="k">Versión</div><div class="v" style="font-size:20px">Edición 01</div><div class="s">06/10/2026</div></div><div class="kpi"><div class="k">Edición anterior</div><div class="v" style="font-size:20px">Edición 00</div><div class="s">25/03/2023</div></div></div>
       <p><b>Elaborado:</b> María Luisa Becerra Martínez y Marta Cruz Cañete, Facultativas Especialistas de Área (FEA) de Pediatría, Hospital de Montilla.<br><b>Revisado:</b> Francisca Luisa Gallardo Hernández, Jefa de Sección de Pediatría, Hospital de Montilla.</p></div>
     <div class="card amb"><span class="step">Importante</span><h2>Uso de esta herramienta</h2>
@@ -780,6 +784,42 @@ let startTab = 'guia';
 try { startTab = localStorage.getItem('hipo-tab') || 'guia'; } catch (e) { /* sin almacenamiento */ }
 showTab(['guia', 'calc', 'proto', 'info'].includes(startTab) ? startTab : 'guia');
 
+// Portada: se muestra al abrir la app (una vez por sesión, para no repetirla al recargar tras actualizar).
+{
+  const p = $('#portada'), v = $('#portada-version');
+  if (v) v.textContent = `Versión ${APP_VERSION.num} · ${APP_VERSION.fecha}`;
+  const entrar = () => { p.hidden = true; try { sessionStorage.setItem('hipo-portada', '1'); } catch (e) { /* sin almacenamiento */ } };
+  if (p && !p.hidden) { $('#portada-entrar').addEventListener('click', entrar); $('#portada-entrar').focus(); }
+}
+
+// Actualizaciones (mismo patrón que HidratIV y DosisPed): la versión nueva espera instalada y se avisa con
+// «Nueva versión disponible · Actualizar»; al pulsar, se activa y la página se recarga.
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-  window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => { /* sin modo sin conexión */ }); });
+  let recargando = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (!recargando) { recargando = true; location.reload(); } });
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').then((reg) => {
+      if (reg.waiting && navigator.serviceWorker.controller) avisoActualizacion(reg);
+      reg.addEventListener('updatefound', () => {
+        const nw = reg.installing; if (!nw) return;
+        nw.addEventListener('statechange', () => { if (nw.state === 'installed' && navigator.serviceWorker.controller) avisoActualizacion(reg); });
+      });
+      const comprobar = () => { try { reg.update(); } catch (e) { /* sin conexión */ } };
+      comprobar();
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') comprobar(); });   // al volver a la app (iPhone)
+    }).catch(() => { /* sin modo sin conexión */ });
+  });
+}
+function avisoActualizacion(reg) {
+  if ($('.update-banner')) return;
+  const b = document.createElement('div');
+  b.className = 'update-banner'; b.setAttribute('role', 'status');
+  b.innerHTML = '<span>Nueva versión disponible</span><button type="button">Actualizar</button>';
+  b.querySelector('button').addEventListener('click', () => {
+    b.querySelector('button').disabled = true; b.querySelector('span').textContent = 'Actualizando…';
+    const recarga = () => { const u = new URL(location.href); u.searchParams.set('v', Date.now()); location.replace(u.toString()); };
+    if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' }); else recarga();
+    setTimeout(recarga, 4000);        // red de seguridad si no llega a cambiar el service worker
+  });
+  document.body.appendChild(b);
 }

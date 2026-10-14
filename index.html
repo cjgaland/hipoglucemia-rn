@@ -15,6 +15,17 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <div id="portada" class="portada" role="dialog" aria-modal="true" aria-labelledby="portada-tit">
+    <div class="portada-in">
+      <img src="img/icon.svg" alt="" class="portada-logo" width="128" height="128">
+      <div class="portada-kicker">Servicio de Pediatría<br>Hospital de Montilla</div>
+      <h1 id="portada-tit">Hipoglucemia en el recién nacido</h1>
+      <p class="portada-obj">Guía paso a paso y calculadora para prevenir, detectar y tratar la hipoglucemia en el recién nacido de 35 o más semanas, según el protocolo del Servicio.</p>
+      <button type="button" class="btn portada-btn" id="portada-entrar">Entrar</button>
+      <p class="portada-meta">Autora: María Luisa Becerra, Pediatra<br><span id="portada-version"></span></p>
+    </div>
+  </div>
+  <script>try { if (sessionStorage.getItem('hipo-portada')) document.getElementById('portada').hidden = true; } catch (e) { /* sin almacenamiento */ }</script>
   <header class="topbar">
     <div class="brand">
       <img src="img/icon.svg" alt="" width="34" height="34">

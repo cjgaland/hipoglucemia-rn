@@ -1,6 +1,6 @@
 // Service worker: permite usar la app sin conexión.
-// Al publicar cambios, sube el número de VERSION para que los móviles descarguen la nueva versión.
-const VERSION = 'hipo-rn-v10';
+// Al publicar cambios, sube VERSION (y APP_VERSION en app.js): los móviles verán «Nueva versión disponible · Actualizar».
+const VERSION = 'hipo-rn-v11';
 const FILES = ['./', 'index.html', 'styles.css', 'app.js', 'manifest.webmanifest',
   'img/icon.svg', 'img/icon-192.png', 'img/icon-512.png', 'img/apple-touch-icon.png', 'img/algoritmo.png',
   encodeURI('Protocolo/Protocolo hipoglucemia en recién nacidos (nuevo diseño).pdf'),
@@ -8,7 +8,8 @@ const FILES = ['./', 'index.html', 'styles.css', 'app.js', 'manifest.webmanifest
   encodeURI('Protocolo/Infografía hipoglucemia en recién nacidos.pdf'), 'Protocolo/paginas/paginas.json'];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(VERSION).then((c) => c.addAll(FILES)).then(() => self.skipWaiting()));
+  // Sin skipWaiting(): la versión nueva queda en espera hasta que el usuario pulse «Actualizar» en el aviso.
+  e.waitUntil(caches.open(VERSION).then((c) => c.addAll(FILES)));
 });
 // Páginas del visor de documentos (Protocolo/paginas/): se guardan en segundo plano, sin bloquear la instalación.
 async function guardarPaginas() {
@@ -21,6 +22,7 @@ self.addEventListener('activate', (e) => {
   e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== VERSION).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
   e.waitUntil(guardarPaginas().catch(() => {}));
 });
+self.addEventListener('message', (e) => { if (e.data && e.data.type === 'SKIP_WAITING') self.skipWaiting(); });
 // Red primero (para recibir actualizaciones); si no hay conexión, caché.
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
