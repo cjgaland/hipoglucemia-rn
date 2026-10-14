@@ -840,7 +840,7 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
         const nw = reg.installing; if (!nw) return;
         nw.addEventListener('statechange', () => { if (nw.state === 'installed' && navigator.serviceWorker.controller) avisoActualizacion(reg); });
       });
-      const comprobar = () => { try { reg.update(); } catch (e) { /* sin conexión */ } };
+      const comprobar = () => { reg.update().catch(() => { /* sin conexión: se comprobará más tarde */ }); };
       comprobar();
       document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') comprobar(); });   // al volver a la app (iPhone)
     }).catch(() => { /* sin modo sin conexión */ });
