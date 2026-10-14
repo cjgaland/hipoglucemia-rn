@@ -6,6 +6,9 @@
 // Versiones de la app (se listan en Info, la más reciente arriba). Al publicar: añadir una entrada AL PRINCIPIO
 // y subir también VERSION en sw.js (hipo-rn-v<número>). La portada y la pestaña Info muestran NOVEDADES[0].
 const NOVEDADES = [
+  { version: '13', fecha: '14/10/2026', titulo: 'Corrección del aviso de actualización', cambios: [
+    'El aviso «Nueva versión disponible» aparece también sobre la portada (antes quedaba oculto detrás).',
+    'Tras actualizar se carga siempre la versión nueva (antes podía seguir viéndose la anterior unos minutos).'] },
   { version: '12', fecha: '14/10/2026', titulo: 'Historial de versiones y vuelta a la portada', cambios: [
     'Al tocar el logo o el título de la barra superior se vuelve a la portada.',
     'Historial de versiones en la pestaña Info.',
@@ -835,11 +838,10 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   navigator.serviceWorker.addEventListener('controllerchange', () => { if (!recargando) { recargando = true; location.reload(); } });
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js').then((reg) => {
+      const vigilar = (nw) => nw && nw.addEventListener('statechange', () => { if (nw.state === 'installed' && navigator.serviceWorker.controller) avisoActualizacion(reg); });
       if (reg.waiting && navigator.serviceWorker.controller) avisoActualizacion(reg);
-      reg.addEventListener('updatefound', () => {
-        const nw = reg.installing; if (!nw) return;
-        nw.addEventListener('statechange', () => { if (nw.state === 'installed' && navigator.serviceWorker.controller) avisoActualizacion(reg); });
-      });
+      vigilar(reg.installing);            // la versión nueva puede estar descargándose ya al arrancar
+      reg.addEventListener('updatefound', () => vigilar(reg.installing));
       const comprobar = () => { reg.update().catch(() => { /* sin conexión: se comprobará más tarde */ }); };
       comprobar();
       document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') comprobar(); });   // al volver a la app (iPhone)

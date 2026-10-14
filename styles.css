@@ -181,7 +181,7 @@ html.visor-abierto, html.visor-abierto body { overflow: hidden; }
 .portada-meta { margin-top: 30px; font-size: 13px; line-height: 1.6; color: #9FB2C7; }
 
 /* Aviso de nueva versión */
-.update-banner { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 24px); transform: translateX(-50%); z-index: 150;
+.update-banner { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 24px); transform: translateX(-50%); z-index: 250;   /* por encima de la portada */
   display: flex; gap: 12px; align-items: center; max-width: calc(100vw - 32px); background: var(--navy); color: #fff;
   padding: 10px 12px 10px 18px; border-radius: 24px; font-weight: 600; font-size: 14.5px; box-shadow: 0 8px 24px rgba(0, 0, 0, .3); }
 .update-banner span { white-space: nowrap; }
