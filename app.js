@@ -24,7 +24,7 @@ const PR = {
   objetivo: { p0: 40, p1: 46, p2: 60 },        // Tabla 1: objetivo terapéutico (≥ 40, ≥ 46, > 60)
   objIncl: { p0: true, p1: true, p2: false },
   gel: { mlkg: 0.5, mgkg: 200 },               // Anexo 1
-  formula1: 5, formula2: 8,                    // mL/kg · 1.ª corrección: nota 2 y Anexo 1 · 2.ª corrección: algoritmo, nota 5 y Anexo 1
+  formula1: 5, formula2gel: 5, formula2sinGel: 8, // mL/kg · 1.ª corrección: nota 2 y Anexo 1 · 2.ª corrección: algoritmo, nota 5 y Anexo 1 (con gel, fórmula obligatoria)
   bolo: { mlkg: 2, mgkg: 200 },                // Anexo 2, 2.2 (SG 10 %)
   ivInicio: { pct: 10, mlkgd: 80, gir: 5.6 },  // Anexo 2, 2.1
   glucagon: { min: 20, max: 30, maxMg: 1 },    // Nota 4 (µg/kg)
@@ -183,15 +183,19 @@ function needPeso() { return S.peso ? '' : `<div class="alert info"><span class=
 const doseLine = (what, how, sub = '') => `<div class="dose"><div class="what">${what}${sub ? `<small>${sub}</small>` : ''}</div><div class="how">${how}</div></div>`;
 
 function correccion(n) {
-  // n = 1: primera corrección (algoritmo, nota 2) · n = 2: segunda corrección (algoritmo, nota 5): fórmula 8 mL/kg con o sin gel
+  // n = 1: primera corrección (algoritmo, nota 2): gel y, después, pecho o fórmula de inicio 5 mL/kg.
+  // n = 2: segunda corrección (algoritmo, nota 5, Anexo 1): gel y toma OBLIGATORIA de fórmula 5 mL/kg y, tras ella, pecho si se desea;
+  //        sin gel, fórmula de inicio 8 mL/kg y, después, pecho si se desea.
   const p = S.peso;
   const gel = p ? `${fml(PR.gel.mlkg * p)} mL` : '0,5 mL/kg';
-  const fv = n === 2 ? PR.formula2 : PR.formula1;
+  const fv = n === 1 ? PR.formula1 : S.gel ? PR.formula2gel : PR.formula2sinGel;
   const f = p ? `${fml(fv * p)} mL` : `${fv} mL/kg`;
   let html = needPeso();
   if (S.gel) html += doseLine('Gel oral de dextrosa al 40 %', gel, `0,5 mL/kg (${p ? fmt(PR.gel.mgkg * p, 0) + ' mg' : '200 mg/kg'}) · secar la boca, aplicar en la mucosa yugal y masajear la mejilla`);
-  html += doseLine(S.gel ? 'Después: colocar al pecho si la madre desea lactancia materna, o bien dar una toma de fórmula de inicio' : 'Sin gel: colocar al pecho si la madre desea lactancia materna, o bien dar una toma de fórmula de inicio',
-    `${f} de fórmula`, `${fv} mL/kg · ${S.gel ? `administrar primero el gel y posteriormente ofrecer la toma (${n === 1 ? 'nota 2; Anexo 1, primera dosis' : 'algoritmo; Anexo 1, segunda dosis'})` : n === 1 ? 'nota 2' : 'nota 5'}`);
+  if (n === 1) html += doseLine(S.gel ? 'Después: colocar al pecho si la madre desea lactancia materna, o bien dar una toma de fórmula de inicio' : 'Sin gel: colocar al pecho si la madre desea lactancia materna, o bien dar una toma de fórmula de inicio',
+    `${f} de fórmula`, `${fv} mL/kg · ${S.gel ? 'administrar primero el gel y posteriormente ofrecer la toma (nota 2; Anexo 1, primera dosis)' : 'nota 2'}`);
+  else html += doseLine(S.gel ? 'Después: dar <b>siempre</b> una toma de fórmula de inicio y, tras ella, colocar al pecho si la madre desea lactancia materna' : 'Sin gel: dar una toma de fórmula de inicio y, después, colocar al pecho si la madre desea lactancia materna',
+    `${f} de fórmula`, `${fv} mL/kg · ${S.gel ? 'la toma de fórmula es obligatoria, también con lactancia materna exclusiva (algoritmo; nota 5; Anexo 1, segunda dosis)' : 'nota 5'}`);
   html += `<div class="row" style="margin-top:10px"><span class="lead" style="margin:0">Comprobar glucemia <b>30 minutos tras la toma</b>.</span>${timerBtn(30, n === 1 ? 'Control tras 1.ª corrección' : 'Control tras 2.ª corrección')}</div>`;
   return html;
 }
@@ -333,7 +337,7 @@ function renderFlow() {
     ${glucInput('g-g3', 'g3', 'Glucemia 30 minutos tras la toma')}${recordatorio(S.g3)}${limiteMsg(S.g3, per)}</div>`);
   if (S.g3 == null) { $('#flow').innerHTML = out.join(''); return; }
   const c3 = clasif(S.g3, per);
-  if (c3 === 'hipo') out.push(ivBlock(`Persiste la hipoglucemia tras la segunda corrección (Anexo 2, 1.4: glucemia &lt; 40 mg/dL tras una segunda corrección). Si tras la segunda dosis de gel persiste la hipoglucemia, está indicado el ingreso (Anexo 1).`));
+  if (c3 === 'hipo') out.push(ivBlock(`Persiste la hipoglucemia tras la segunda corrección (Anexo 2, 1.4: glucemia &lt; 40 mg/dL (0-24 h) o &lt; 46 mg/dL (24-72 h) tras una segunda corrección). Si tras la segunda dosis de gel persiste la hipoglucemia, está indicado el ingreso (Anexo 1).`));
   else out.push(continuar());
   $('#flow').innerHTML = out.join('');
 }
@@ -435,7 +439,8 @@ const CALC = {
     o.innerHTML = `<div style="margin-top:8px">
       ${doseLine('Gel oral de dextrosa al 40 %', `${fml(0.5 * p)} mL`, `0,5 mL/kg = ${fmt(200 * p, 0)} mg (Anexo 1)`)}
       ${doseLine('Fórmula de inicio, 1.ª corrección (si no se coloca al pecho)', `${fml(5 * p)} mL`, '5 mL/kg (nota 2; Anexo 1, primera dosis)')}
-      ${doseLine('Fórmula de inicio, 2.ª corrección (si no se coloca al pecho)', `${fml(8 * p)} mL`, '8 mL/kg (algoritmo; nota 5; Anexo 1, segunda dosis)')}
+      ${doseLine('Fórmula de inicio, 2.ª corrección con gel (siempre; después, pecho si se desea)', `${fml(5 * p)} mL`, '5 mL/kg (algoritmo; nota 5; Anexo 1, segunda dosis)')}
+      ${doseLine('Fórmula de inicio, 2.ª corrección sin gel (después, pecho si se desea)', `${fml(8 * p)} mL`, '8 mL/kg (nota 5)')}
       ${doseLine('Bolo de SG 10 % (hipoglucemia sintomática)', `${fml(2 * p)} mL`, '2 mL/kg = 200 mg/kg, en 5-10 minutos (Anexo 2, 2.2)')}
       ${doseLine('SG 10 % inicial a 80 mL/kg/día', `${fmt(80 * p / 24, 1)} mL/h`, '5,6 mg/kg/min (Anexo 2, 2.1)')}
       ${doseLine('Glucagón 20-30 µg/kg (máximo 1 mg)', `${fmt(Math.min(20 * p, 1000), 0)}-${fmt(Math.min(30 * p, 1000), 0)} µg`, 'Nota 4 · no se recomienda en RN pequeños para la edad gestacional ni en prematuros')}
@@ -527,7 +532,7 @@ function renderProto() {
       <div class="note-box"><sup><b>2</b></sup> Administrar primero el gel de dextrosa y posteriormente ofrecer la toma. Si no se dispone de dicho gel, colocar al pecho si la madre desea lactancia materna, o bien dar una toma de fórmula de inicio (5 mL/kg).</div>
       <div class="note-box"><sup><b>3</b></sup> Si hay retraso en conseguir un acceso venoso, administrar 0,5 mL/kg de gel de dextrosa al 40 %.</div>
       <div class="note-box"><sup><b>4</b></sup> En caso de hipoglucemia grave (&lt; 30 mg/dL) o si persiste la hipoglucemia &lt; 50 mg/dL a pesar de estar administrando la dosis máxima de glucosa intravenosa en infusión continua, valorar administrar una dosis de glucagón (20-30 µg/kg; máximo 1 mg) intramuscular, subcutánea o en bolo lento intravenoso (en un minuto); se puede repetir a los 20 minutos si no hay respuesta. No se recomienda en RN pequeños para la edad gestacional ni en prematuros, por sus escasas reservas de glucógeno.</div>
-      <div class="note-box"><sup><b>5</b></sup> En caso de no disponer de gel de dextrosa al 40 %, colocar al pecho si la madre desea lactancia materna, o bien dar una toma de fórmula de inicio (8 mL/kg).</div>
+      <div class="note-box"><sup><b>5</b></sup> Administrar una segunda dosis de gel de dextrosa y posteriormente ofrecer una toma de 5 mL/kg de fórmula de inicio; después de esta toma, si la madre desea lactancia materna, colocar al pecho. En caso de no disponer de gel de dextrosa al 40 %, dar una toma de fórmula de inicio (8 mL/kg) y posteriormente, si la madre desea lactancia materna, colocar al pecho.</div>
       <div class="note-box"><sup><b>6</b></sup> Considerar suspender los controles de glucemia cuando se cumplan ambas condiciones:<br>a) al menos tres controles seguidos ≥ 46 mg/dL con adecuada tolerancia oral; y<br>b) haber completado el periodo mínimo de vigilancia: 12 horas en hijos de madre diabética y grandes para la edad gestacional, y 24 horas en pequeños para la edad gestacional y prematuros.<br>Antes del alta de los RN que no han precisado aportes intravenosos (con al menos 48 horas de vida): si la glucemia está entre 45 y 50 mg/dL, asegurar aportes y comprobar que la glucemia supera los 50 mg/dL tras ellos.</div>`)}
     ${sec('9', 'Bibliografía', `<ol style="word-break:break-word">
       <li>Fuente Lucas G, Montoro Cremades D. Manejo de la hipoglucemia precoz en RN con factores de riesgo [protocolo interno no publicado]. Abril-mayo de 2021.</li>
@@ -543,9 +548,9 @@ function renderProto() {
       <tr><td class="l"><b>Nombre</b></td><td class="l">Glucosa 40 % gel oral</td></tr><tr><td class="l"><b>Forma farmacéutica</b></td><td class="l">Gel para mucosa oral</td></tr><tr><td class="l"><b>Presentación</b></td><td class="l">Jeringas precargadas de 3 mL</td></tr>
       <tr><td class="l"><b>Composición</b></td><td class="l">Glucosa 100 g<br>Carboximetilcelulosa 2,5 g (espesante)<br>Agua conservans c.s.p. 250 mL (parabenos)</td></tr><tr><td class="l"><b>Propiedades</b></td><td class="l">Viscosa, incolora e inodora</td></tr><tr><td class="l"><b>Conservación</b></td><td class="l">Conservar en nevera (2-8 °C)</td></tr><tr><td class="l"><b>Caducidad</b></td><td class="l">1 mes</td></tr></table></div><p class="tbl-note">Tabla 3. Fórmula magistral del gel oral de dextrosa al 40 %.</p>
       <p><b>Modo de administración:</b><br>- Secar la boca del RN con una gasa.<br>- Aplicar el gel en la mucosa yugal y masajear la mejilla del RN durante unos segundos.</p>
-      <p><b>Dosis:</b><br>- Primera dosis: 0,5 mL/kg (200 mg/kg) y, después, colocar al pecho si la madre desea lactancia materna, o bien dar una toma de fórmula de inicio (5 mL/kg). Repetir glucemia capilar a los 30 minutos.<br>- Segunda dosis: si persiste la hipoglucemia y el RN sigue asintomático, repetir la misma dosis y, después, colocar al pecho si la madre desea lactancia materna, o bien dar una toma de fórmula de inicio (8 mL/kg).<br>- Si tras la segunda dosis persiste la hipoglucemia, está indicado el ingreso.</p>
+      <p><b>Dosis:</b><br>- Primera dosis: 0,5 mL/kg (200 mg/kg) y, después, colocar al pecho si la madre desea lactancia materna, o bien dar una toma de fórmula de inicio (5 mL/kg). Repetir glucemia capilar a los 30 minutos.<br>- Segunda dosis: si persiste la hipoglucemia y el RN sigue asintomático, repetir la misma dosis y posteriormente ofrecer una toma de 5 mL/kg de fórmula de inicio; después de esta toma, si la madre desea lactancia materna, colocar al pecho.<br>- Si tras la segunda dosis persiste la hipoglucemia, está indicado el ingreso.</p>
       <p>- Si el RN presenta un segundo episodio de hipoglucemia se pueden administrar hasta 2 dosis más de gel de dextrosa.<br>- En caso de un tercer episodio está indicado el ingreso.</p>`)}
-    ${sec('A2', 'Anexo 2 · Tratamiento con glucosa intravenosa', `<p><b>1. Criterios para iniciar tratamiento con glucosa intravenosa:</b></p><p>1.1. RN con hipoglucemia <b>sin posibilidad de alimentación enteral</b>.<br>1.2. RN con hipoglucemia y <b>síntomas moderados o graves</b>.<br>1.3. RN con hipoglucemia <b>asintomática y glucemia &lt; 30 mg/dL</b> tras una <b>primera corrección</b> con gel de dextrosa y toma (pecho o fórmula de inicio 5 mL/kg).<br>1.4. RN con hipoglucemia <b>asintomática y glucemia &lt; 40 mg/dL</b> tras una <b>segunda corrección</b> con gel de dextrosa y toma (pecho o fórmula de inicio 5 mL/kg; 8 mL/kg si no se dispone de gel).</p>
+    ${sec('A2', 'Anexo 2 · Tratamiento con glucosa intravenosa', `<p><b>1. Criterios para iniciar tratamiento con glucosa intravenosa:</b></p><p>1.1. RN con hipoglucemia <b>sin posibilidad de alimentación enteral</b>.<br>1.2. RN con hipoglucemia y <b>síntomas moderados o graves</b>.<br>1.3. RN con hipoglucemia <b>asintomática y glucemia &lt; 30 mg/dL</b> tras una <b>primera corrección</b> con gel de dextrosa y toma (pecho o fórmula de inicio 5 mL/kg).<br>1.4. RN con hipoglucemia <b>asintomática y glucemia &lt; 40 mg/dL (0-24 h) o &lt; 46 mg/dL (24-72 h)</b> tras una <b>segunda corrección</b> (gel de dextrosa y toma de fórmula de inicio de 5 mL/kg o, si no se dispone de gel, toma de fórmula de inicio de 8 mL/kg; véanse la nota 5 del algoritmo y el anexo 1).</p>
       <p><b>2. Dosis</b>:</p><p>2.1. Iniciar con <b>suero glucosado al 10 % a 80 mL/kg/día</b> (5,6 mg/kg/min de glucosa).<br>2.2. Reservar la administración de <b>bolos</b> de glucosa para las hipoglucemias <b>sintomáticas:</b> 200 mg/kg (2 mL/kg de suero glucosado 10 %) en 5-10 minutos.<br>2.3. Aporte total máximo de líquidos en las primeras 72 h de vida (intravenoso y oral): 100 mL/kg/día (para prevenir la hiponatremia).<br>2.4. Medir la glucosa (capilar inicialmente, y comprobar con venosa según cifras y evolución) a los 30-45 minutos de iniciada la infusión de glucosa intravenosa, y 30-45 minutos después de cada modificación de dosis.<br>2.5. El límite superior de glucemia recomendado es <b>90-100 mg/dL</b>.<br>2.6. Si son necesarios aportes superiores a 10-12 mg/kg/min o 160 mL/kg/día, considerar otras opciones terapéuticas.</p>
       <p><b>3. Guía para el ajuste de aportes intravenosos</b></p><div class="tbl-wrap"><table><tr><th>Glucemia preprandial (mg/dL)</th><th>Variación en la perfusión de glucosa (mg/kg/min)</th></tr>
       <tr><td class="hipo">50-60</td><td class="hipo">Disminuir 0,4</td></tr><tr><td class="hipo">60-70</td><td class="hipo">Disminuir 0,8</td></tr><tr><td class="hipo">70-90</td><td class="hipo">Disminuir 1,2</td></tr><tr><td class="hipo">&gt; 90</td><td class="hipo">Disminuir 1,6</td></tr><tr><td class="ok">&lt; 40</td><td class="ok">Aumentar 0,8</td></tr><tr><td class="ok">40-50</td><td class="ok">Aumentar 0,4 (solo si la previa fue &lt; 50 mg/dL)</td></tr></table></div><p class="tbl-note">Tabla 4. Guía para el ajuste de aportes intravenosos.</p>
